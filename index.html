@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nexus AI | Web3 Digital Asset SaaS</title>
+  <meta name="description" content="Automated digital product generator and instant USDT payout gateway on Web3 with real-time balance tracking." />
+  <meta name="theme-color" content="#07090e" />
+
+  <!-- Google Fonts: Plus Jakarta Sans, Cairo, and IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            arabic: ['Cairo', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background-color: #07090e;
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    .font-arabic { font-family: 'Cairo', system-ui, sans-serif; }
+    .font-mono-code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    .bg-grid-cyber {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+    }
+    .bg-radial-glow {
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(16, 185, 129, 0.05) 35%, transparent 70%);
+    }
+    .glow-emerald { box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25); }
+    .glow-indigo { box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.25); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  </style>
+</head>
+<body class="bg-[#07090e] text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200 min-h-screen overflow-x-hidden">
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- High Fidelity SVG Icons ---
+    const IconSparkles = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    );
+
+    const IconWallet = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    );
+
+    const IconZap = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    );
+
+    const IconArrowUpRight = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M7 7h10v10" />
+      </svg>
+    );
+
+    const IconArrowDownRight = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 7l10 10M17 7v10H7" />
+      </svg>
+    );
+
+    const IconCopy = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+    );
+
+    const IconCheck = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    );
+
+    const IconDownload = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+    );
+
+    const IconShieldCheck = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    );
+
+    const IconLock = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    );
+
+    const IconVolume2 = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+    );
+
+    const IconVolumeX = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <line x1="23" y1="9" x2="17" y2="15"></line>
+        <line x1="17" y1="9" x2="23" y2="15"></line>
+      </svg>
+    );
+
+    const IconRefreshCw = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+    );
+
+    const IconX = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    );
+
+    const IconChevronRight = ({ className = "h-4 w-4" }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    );
+
+    // --- Web Audio Synthesizer ---
+    class SoundFx {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx && typeof window !== 'undefined') {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+      }
+      playClick() {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
+          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.05);
+        } catch(e) {}
+      }
+      playSuccess() {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+            gain.gain.setValueAtTime(0.05, now + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.06);
+            osc.stop(now + idx * 0.06 + 0.25);
+          });
+        } catch(e) {}
+      }
+      playCash() {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          [880, 1174.66, 1760].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.08);
+            gain.gain.setValueAtTime(0.06, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.3);
+          });
+        } catch(e) {}
+      }
+    }
+
+    const sfx = new SoundFx();
+
+    const NETWORK_CONFIGS = {
+      TRC20: {
+        name: 'Tron (TRC-20)',
+        symbol: 'USDT-TRC20',
+        fee: 1.0,
+        speed: '~15 sec',
+        addressSample: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+      },
+      ERC20: {
+        name: 'Ethereum (ERC-20)',
+        symbol: 'USDT-ERC20',
+        fee: 6.5,
+        speed: '~2 min',
+        addressSample: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+      },
+      ARBITRUM: {
+        name: 'Arbitrum One (L2)',
+        symbol: 'USDT-ARB',
+        fee: 0.45,
+        speed: '~10 sec',
+        addressSample: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'
+      },
+      POLYGON: {
+        name: 'Polygon (PoS)',
+        symbol: 'USDT-POL',
+        fee: 0.35,
+        speed: '~20 sec',
+        addressSample: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
+      }
+    };
+
+    const CATEGORIES = [
+      {
+        id: 'excel',
+        name: 'Excel & Sheets Formulas',
+        arabicName: 'صيغ إكسل ونماذج جداول البيانات',
+        defaultPrompt: 'Automated 12-Month Cashflow and Net Working Capital Forecasting Formula with Dynamic Scenario Dropdown',
+        suggestedPrompts: [
+          'Automated 12-Month Cashflow and Net Working Capital Forecasting Formula',
+          'Dynamic Inventory Reorder Level Calculator with Safety Stock Buffer (XLOOKUP & IFS)',
+          'E-commerce Customer Lifetime Value (LTV) and Churn Cohort Matrix Array Formula'
+        ]
+      },
+      {
+        id: 'copywriting',
+        name: 'High-Converting Copywriting Bundles',
+        arabicName: 'حزم النصوص الإعلانية والتسويقية',
+        defaultPrompt: 'High-ticket SaaS Launch Sequence with Objection-Killing Hook and 5 Follow-Up Email Frameworks',
+        suggestedPrompts: [
+          'High-ticket SaaS Launch Sequence with Objection-Killing Hook',
+          'Luxury Direct-to-Consumer Brand Storytelling Ad Script with Emotional Triggers',
+          'Cold LinkedIn InMail Sequence for Enterprise Sales Directors (+42% Response Rate)'
+        ]
+      },
+      {
+        id: 'tailwind',
+        name: 'Tailwind CSS UI Components',
+        arabicName: 'أكواد ومكونات تايلوند الحديثة',
+        defaultPrompt: 'Production-ready Dark Mode Crypto Portfolio Card with Monospace PnL and Quick Swap Form',
+        suggestedPrompts: [
+          'Production-ready Dark Mode Crypto Portfolio Card with Monospace PnL',
+          'Sleek Micro-SaaS Pricing Matrix with Annual Discount Toggle and Feature Checks',
+          'Mobile-First TRC20 Payment Confirmation Drawer with Copy-to-Clipboard Address'
+        ]
+      },
+      {
+        id: 'prompts',
+        name: 'AI Engineering Prompts & Blueprints',
+        arabicName: 'هندسة أوامر الذكاء الاصطناعي والأتمتة',
+        defaultPrompt: 'Autonomous Market Research Agent System Prompt with Structured JSON Output and Source Citation',
+        suggestedPrompts: [
+          'Autonomous Market Research Agent System Prompt with Structured JSON Output',
+          'Code Refactoring & Security Audit Chain-of-Thought Meta-Prompt for Claude 3.7',
+          'Autonomous Customer Support Ticket Routing Matrix with Emotion Classification'
+        ]
+      },
+      {
+        id: 'trading',
+        name: 'Algorithmic Trading & Pine Scripts',
+        arabicName: 'استراتيجيات التداول الآلي و Pine Script',
+        defaultPrompt: 'TradingView Pine Script v5 Dynamic Volatility Breakout with ATR Trailing Stop and Take-Profit Tiers',
+        suggestedPrompts: [
+          'TradingView Pine Script v5 Dynamic Volatility Breakout with ATR Trailing Stop',
+          'Volume Profile VWAP Mean Reversion Strategy with Custom Session Filter',
+          'Crypto DCA & Position Sizing Calculator with Leverage Liquidation Safeguard'
+        ]
+      }
+    ];
+
+    const INITIAL_PRODUCTS = [
+      {
+        id: 'prod-001',
+        title: 'Dynamic Multi-Scenario DCF Valuation Model',
+        arabicTitle: 'نموذج التقييم المالي المتعدد السيناريوهات (DCF)',
+        category: 'excel',
+        categoryName: 'Excel Formulas',
+        description: 'Full automated discounted cash flow workbook formula system with Monte Carlo sensitivity matrix.',
+        content: `=LET(
+  wacc, C4,
+  growth, D4:D8,
+  cf_proj, B12:F12 * (1 + growth),
+  discount_factors, (1 + wacc) ^ SEQUENCE(1, 5, 1, 1),
+  pv_cf, cf_proj / discount_factors,
+  terminal_val, (INDEX(cf_proj, 5) * (1 + 0.025)) / (wacc - 0.025),
+  pv_terminal, terminal_val / ((1 + wacc) ^ 5),
+  enterprise_val, SUM(pv_cf) + pv_terminal,
+  enterprise_val
+)`,
+        priceUSDT: 45.0,
+        totalSales: 48,
+        createdAt: '2026-10-18'
+      },
+      {
+        id: 'prod-002',
+        title: '7-Figure SaaS VSL & Onboarding Email Suite',
+        arabicTitle: 'حزمة نصوص الفيديو الترويجي ورسائل التهيئة للشركات',
+        category: 'copywriting',
+        categoryName: 'Copywriting Bundles',
+        description: 'Complete high-conversion 12-step script framework tested on $10M+ ARR software launches.',
+        content: `## HOOK (00:00 - 00:45)
+"Most founders spend 6 months writing code no one buys. Here is the 3-step automated protocol that pre-sold $42,000 in digital licenses before line 1 was typed."
+
+## THE CORE MECHANISM (00:45 - 02:30)
+1. The Arbitrage Loop: Instant digital asset bundling without fulfillment latency.
+2. The Web3 Settlement Rail: Instant USDT payouts bypassing banking clearance delays.
+3. The Algorithmic Distribution Engine: Turning one-time code into recurring digital royalties.
+
+## CALL TO ACTION
+"Click below to claim your master license with instant commercial resale authorization."`,
+        priceUSDT: 69.0,
+        totalSales: 32,
+        createdAt: '2026-10-17'
+      },
+      {
+        id: 'prod-003',
+        title: 'Web3 Monospace Staking & Payout Card',
+        arabicTitle: 'مكون واجهة المستخدم لمحفظة التخزين والسحب المالي',
+        category: 'tailwind',
+        categoryName: 'Tailwind CSS UI',
+        description: 'Responsive, accessible dark mode card with tabular USDT counters and instant approval states.',
+        content: `<div class="rounded-xl border border-slate-800 bg-[#0a0d16] p-6 shadow-2xl">
+  <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+    <div>
+      <p class="text-xs font-mono text-slate-400">VAULT STAKE // 30-DAY</p>
+      <h3 class="text-lg font-bold text-white">Yield Optimizer Protocol</h3>
+    </div>
+    <span class="rounded bg-emerald-500/10 px-2.5 py-1 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+      14.2% APY
+    </span>
+  </div>
+  <div class="mt-4 flex items-baseline justify-between font-mono">
+    <span class="text-xs text-slate-400">Total Deposited</span>
+    <span class="text-xl font-bold text-slate-100 tabular-nums">48,920.00 USDT</span>
+  </div>
+  <button class="mt-6 w-full rounded-lg bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+    Execute Instant Stake
+  </button>
+</div>`,
+        priceUSDT: 35.0,
+        totalSales: 54,
+        createdAt: '2026-10-16'
+      }
+    ];
+
+    const INITIAL_TRANSACTIONS = [
+      {
+        id: 'tx-001',
+        type: 'sale',
+        title: 'Automated Sale: Multi-Scenario DCF Valuation',
+        arabicTitle: 'عملية بيع آلية: نموذج التقييم المالي المتعدد',
+        amount: 45.0,
+        txHash: '0x3f8a91b...c72e',
+        timestamp: '2 mins ago'
+      },
+      {
+        id: 'tx-002',
+        type: 'sale',
+        title: 'Automated Sale: Web3 Staking & Payout Card',
+        arabicTitle: 'عملية بيع آلية: مكون واجهة المحفظة الرقمية',
+        amount: 35.0,
+        txHash: '0x81b490d...e19f',
+        timestamp: '18 mins ago'
+      },
+      {
+        id: 'tx-003',
+        type: 'payout',
+        title: 'Instant Payout Transfer (TRC-20)',
+        arabicTitle: 'تحويل سحب فوري عبر شبكة ترون (TRC-20)',
+        amount: 350.0,
+        network: 'TRC20',
+        address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+        txHash: '9fb83da7081...e2891b',
+        timestamp: '4 hours ago'
+      }
+    ];
+
+    function App() {
+      const [soundOn, setSoundOn] = useState(true);
+      const [langMode, setLangMode] = useState('bilingual');
+      const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+      const [isWalletConnected, setIsWalletConnected] = useState(true);
+      const [connectedWallet, setConnectedWallet] = useState({
+        address: '0x89A52e09...43Eb87B',
+        network: 'TRC20',
+        name: 'TronLink Pro'
+      });
+
+      const [balanceUSDT, setBalanceUSDT] = useState(() => {
+        const saved = localStorage.getItem('nexus_balance');
+        return saved ? parseFloat(saved) : 2845.50;
+      });
+      const [earnings24h, setEarnings24h] = useState(482.00);
+      const [totalProductsSold, setTotalProductsSold] = useState(134);
+      const [isBalanceGlowing, setIsBalanceGlowing] = useState(false);
+      const [autoSalesStream, setAutoSalesStream] = useState(true);
+
+      const [selectedCategory, setSelectedCategory] = useState('excel');
+      const [promptText, setPromptText] = useState(CATEGORIES[0].defaultPrompt);
+      const [targetPrice, setTargetPrice] = useState(39);
+      const [isGenerating, setIsGenerating] = useState(false);
+      const [generationStep, setGenerationStep] = useState(0);
+      const [activeTab, setActiveTab] = useState('preview');
+      const [currentProduct, setCurrentProduct] = useState(INITIAL_PRODUCTS[0]);
+      const [copiedId, setCopiedId] = useState(null);
+
+      const [payoutNetwork, setPayoutNetwork] = useState('TRC20');
+      const [payoutAddress, setPayoutAddress] = useState('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
+      const [payoutAmount, setPayoutAmount] = useState('250.00');
+      const [isPayoutProcessing, setIsPayoutProcessing] = useState(false);
+      const [payoutStep, setPayoutStep] = useState('idle');
+      const [payoutModalOpen, setPayoutModalOpen] = useState(false);
+      const [completedTxDetails, setCompletedTxDetails] = useState(null);
+
+      const [transactions, setTransactions] = useState(() => {
+        const saved = localStorage.getItem('nexus_transactions');
+        return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+      });
+
+      const generatorRef = useRef(null);
+      const payoutRef = useRef(null);
+
+      useEffect(() => {
+        localStorage.setItem('nexus_balance', balanceUSDT.toFixed(2));
+      }, [balanceUSDT]);
+
+      useEffect(() => {
+        localStorage.setItem('nexus_transactions', JSON.stringify(transactions));
+      }, [transactions]);
+
+      const handleCategorySelect = (catId) => {
+        sfx.playClick();
+        setSelectedCategory(catId);
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (cat) setPromptText(cat.defaultPrompt);
+      };
+
+      const triggerSimulatedSale = () => {
+        sfx.playCash();
+        const amount = targetPrice;
+        setBalanceUSDT(prev => Math.round((prev + amount) * 100) / 100);
+        setEarnings24h(prev => prev + amount);
+        setTotalProductsSold(prev => prev + 1);
+
+        setIsBalanceGlowing(true);
+        setTimeout(() => setIsBalanceGlowing(false), 1200);
+
+        const newSaleTx = {
+          id: `tx-sale-${Date.now()}`,
+          type: 'sale',
+          title: `Live Automated Sale: ${selectedCategory.toUpperCase()} Pack`,
+          arabicTitle: `مبيعات رقمية فورية (+${amount} USDT)`,
+          amount: amount,
+          txHash: `0x${Math.random().toString(16).substring(2, 8)}...${Math.random().toString(16).substring(2, 6)}`,
+          timestamp: 'Just now'
+        };
+
+        setTransactions(prev => [newSaleTx, ...prev.slice(0, 19)]);
+
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 35,
+            spread: 60,
+            origin: { y: 0.35 },
+            colors: ['#10b981', '#6366f1', '#3b82f6']
+          });
+        }
+      };
+
+      const handleGenerateProduct = () => {
+        if (!promptText.trim()) return;
+        sfx.playClick();
+        setIsGenerating(true);
+        setGenerationStep(1);
+
+        setTimeout(() => setGenerationStep(2), 600);
+        setTimeout(() => setGenerationStep(3), 1300);
+        setTimeout(() => {
+          let genContent = '';
+          let enTitle = `Automated ${promptText.slice(0, 36)} Asset`;
+          let arTitle = `منتج رقمي ذكي: ${promptText.slice(0, 30)}`;
+
+          if (selectedCategory === 'excel') {
+            genContent = `=LET(\n  raw, FILTER(A2:E500, C2:C500 > 0),\n  rev, INDEX(raw, , 4),\n  growth, (rev - OFFSET(rev, -1, 0)) / OFFSET(rev, -1, 0),\n  HSTACK(INDEX(raw, , 1), rev, TEXT(growth, "0.0%"))\n)`;
+          } else if (selectedCategory === 'copywriting') {
+            genContent = `### HIGH-CONVERTING DIGITAL ASSET LAUNCH\nSubject: The automated protocol that generated $14,200 USDT\n\nHey Founder,\nStop selling manual hours. Package high-demand logic into zero-marginal-cost licenses.\n\n[CTA: Unlock Master License ->]`;
+          } else if (selectedCategory === 'tailwind') {
+            genContent = `<div class="rounded-2xl border border-indigo-500/20 bg-[#0a0d17] p-6 shadow-2xl">\n  <div class="flex items-center justify-between border-b border-slate-800 pb-4">\n    <h3 class="text-base font-bold text-white">Automated Web3 Vault</h3>\n    <span class="text-xs font-mono font-bold text-emerald-400">+24.8% APY</span>\n  </div>\n</div>`;
+          } else {
+            genContent = `//@version=5\nstrategy("Nexus Volatility Breakout", overlay=true)\nbasis = ta.sma(close, 20)\nupper = basis + 2.0 * ta.stdev(close, 20)\nif (ta.crossover(close, upper))\n    strategy.entry("Long", strategy.long)`;
+          }
+
+          const newProd = {
+            id: `prod-${Date.now()}`,
+            title: enTitle,
+            arabicTitle: arTitle,
+            category: selectedCategory,
+            categoryName: selectedCategory.toUpperCase(),
+            description: 'Custom generated digital asset optimized for direct commercial sales on Web3 rails.',
+            content: genContent,
+            priceUSDT: targetPrice,
+            totalSales: 0,
+            createdAt: new Date().toISOString().split('T')[0]
+          };
+
+          setCurrentProduct(newProd);
+          setIsGenerating(false);
+          setGenerationStep(0);
+          sfx.playSuccess();
+
+          if (window.confetti) {
+            window.confetti({
+              particleCount: 50,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#6366f1', '#10b981', '#a855f7']
+            });
+          }
+        }, 2100);
+      };
+
+      const handleCopy = (text, id) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        sfx.playClick();
+        setTimeout(() => setCopiedId(null), 2000);
+      };
+
+      const handleDownload = (prod) => {
+        sfx.playClick();
+        const element = document.createElement('a');
+        const file = new Blob([prod.content], { type: 'text/plain' });
+        element.href = URL.createObjectURL(file);
+        element.download = `${prod.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.txt`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      };
+
+      const handleExecutePayout = () => {
+        const netCfg = NETWORK_CONFIGS[payoutNetwork];
+        const amountNum = parseFloat(payoutAmount);
+
+        if (isNaN(amountNum) || amountNum <= 0) {
+          alert('Please enter a valid USDT payout amount.');
+          return;
+        }
+        if (amountNum > balanceUSDT) {
+          alert(`Requested amount exceeds available balance ($${balanceUSDT.toFixed(2)} USDT).`);
+          return;
+        }
+        if (amountNum <= netCfg.fee) {
+          alert(`Payout amount must be greater than network fee ($${netCfg.fee.toFixed(2)} USDT).`);
+          return;
+        }
+        if (!payoutAddress.trim()) {
+          alert('Please provide your public wallet destination address.');
+          return;
+        }
+
+        sfx.playClick();
+        setIsPayoutProcessing(true);
+        setPayoutModalOpen(true);
+        setPayoutStep('broadcasting');
+
+        setTimeout(() => setPayoutStep('confirming'), 1200);
+
+        setTimeout(() => {
+          const newBal = Math.round((balanceUSDT - amountNum) * 100) / 100;
+          setBalanceUSDT(newBal);
+
+          const txHashStr = payoutNetwork === 'TRC20' 
+            ? `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`
+            : `0x${Math.random().toString(16).substring(2, 14)}${Math.random().toString(16).substring(2, 14)}`;
+
+          const newTx = {
+            id: `tx-payout-${Date.now()}`,
+            type: 'payout',
+            title: `Instant USDT Payout (${payoutNetwork})`,
+            arabicTitle: `تحويل سحب فوري بالدولار الرقمي (${payoutNetwork})`,
+            amount: amountNum,
+            network: payoutNetwork,
+            address: payoutAddress,
+            txHash: txHashStr,
+            timestamp: 'Just now'
+          };
+
+          setTransactions(prev => [newTx, ...prev]);
+          setCompletedTxDetails(newTx);
+          setPayoutStep('completed');
+          setIsPayoutProcessing(false);
+          sfx.playSuccess();
+
+          if (window.confetti) {
+            window.confetti({
+              particleCount: 80,
+              spread: 80,
+              origin: { y: 0.5 },
+              colors: ['#10b981', '#34d399', '#6ee7b7']
+            });
+          }
+        }, 2800);
+      };
+
+      const currentNetworkConfig = NETWORK_CONFIGS[payoutNetwork];
+      const requestedNum = parseFloat(payoutAmount) || 0;
+      const netReceived = Math.max(0, requestedNum - currentNetworkConfig.fee);
+
+      return (
+        <div className="min-h-screen bg-[#07090e] bg-grid-cyber text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+          
+          {/* Top Radial Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] bg-radial-glow pointer-events-none"></div>
+
+          {/* 1. HEADER */}
+          <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#07090e]/90 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+              
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-[1px] shadow-lg shadow-indigo-500/20">
+                  <div className="h-full w-full bg-[#090d16] rounded-[7px] flex items-center justify-center">
+                    <IconSparkles className="h-4 w-4 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap">Nexus AI</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">WEB3</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-arabic leading-none -mt-0.5">نكسوس للذكاء الاصطناعي</span>
+                </div>
+              </div>
+
+              <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-400">
+                <button onClick={() => generatorRef.current?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-slate-200 transition-colors">Product Generator</button>
+                <button onClick={() => payoutRef.current?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-slate-200 transition-colors">Instant Payout</button>
+                <button onClick={triggerSimulatedSale} className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                  <IconZap className="h-3 w-3" />
+                  <span>Simulate Sale (+USDT)</span>
+                </button>
+              </nav>
+
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <button
+                  onClick={() => {
+                    sfx.enabled = !soundOn;
+                    setSoundOn(!soundOn);
+                    if (!soundOn) sfx.playClick();
+                  }}
+                  className="p-2 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200 transition-colors"
+                  title="Toggle Sound FX"
+                >
+                  {soundOn ? <IconVolume2 className="h-4 w-4" /> : <IconVolumeX className="h-4 w-4" />}
+                </button>
+
+                <button
+                  onClick={() => {
+                    sfx.playClick();
+                    setLangMode(prev => prev === 'bilingual' ? 'en' : prev === 'en' ? 'ar' : 'bilingual');
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-xs font-mono text-slate-300 transition-colors"
+                >
+                  {langMode === 'bilingual' ? 'EN/عربي' : langMode.toUpperCase()}
+                </button>
+
+                {isWalletConnected ? (
+                  <button
+                    onClick={() => setIsWalletModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border border-emerald-500/30 bg-emerald-950/20 text-xs font-mono font-medium text-emerald-300 hover:bg-emerald-950/40 transition-all"
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="tabular-nums font-semibold">{connectedWallet.address}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsWalletModalOpen(true)}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all"
+                  >
+                    <IconWallet className="h-3.5 w-3.5" />
+                    <span>Connect Wallet</span>
+                  </button>
+                )}
+              </div>
+
+            </div>
+          </header>
+
+          {/* MAIN CONTAINER */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-10">
+
+            {/* HERO */}
+            <section className="space-y-2 text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 text-xs font-mono text-indigo-400 font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
+                <span>AUTOMATED DIGITAL COMMERCE RAIL</span>
+                <span>·</span>
+                <span className="font-arabic text-slate-400">منصة بيع المنتجات الرقمية الفورية</span>
+              </div>
+              
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white max-w-3xl">
+                Generate & Monetize Automated Digital Assets on Web3
+              </h1>
+
+              <p className="text-sm sm:text-base text-slate-400 max-w-2xl font-arabic">
+                أنتج أدوات ذكية ونماذج إكسل ونصوص تسويقية وكود برمجي عالي الجودة بنقرة واحدة، واستلم أرباحك فورياً بمحفظة USDT دون وسطاء.
+              </p>
+            </section>
+
+            {/* 2. USER BALANCE DASHBOARD */}
+            <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-[#090d16] p-5 sm:p-6 shadow-2xl">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/50 to-indigo-500/50"></div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">USER BALANCE DASHBOARD</h2>
+                    <span className="text-slate-600">·</span>
+                    <span className="text-xs font-arabic text-emerald-400 font-semibold">لوحة الأرباح والرصيد الفوري</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">Live on-chain verifiable treasury balance with instant settlement</p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={triggerSimulatedSale}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-mono font-medium text-emerald-300 transition-colors"
+                  >
+                    <IconZap className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Simulate Sale (+${targetPrice} USDT)</span>
+                  </button>
+
+                  <button
+                    onClick={() => payoutRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition-all"
+                  >
+                    <IconArrowUpRight className="h-3.5 w-3.5" />
+                    <span>Request Payout</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className={`md:col-span-2 rounded-xl border border-slate-800/80 bg-[#0c101c] p-5 transition-all duration-300 ${isBalanceGlowing ? 'ring-2 ring-emerald-500/50 glow-emerald' : ''}`}>
+                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                    <span>CURRENT FUNDS AVAILABLE</span>
+                    <span className="text-[11px] font-arabic text-slate-400">الرصيد المتاح للسحب</span>
+                  </div>
+
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-5xl font-extrabold font-mono tabular-nums text-white">
+                      {balanceUSDT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-lg sm:text-xl font-bold font-mono text-emerald-400">USDT</span>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-400">Settlement protocol:</span>
+                    <span className="text-slate-200 font-semibold flex items-center gap-1">
+                      <IconShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                      TRC-20 / ERC-20 Multi-Rail
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-800/80 bg-[#0c101c] p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                      <span>24H SALES REVENUE</span>
+                      <span className="text-emerald-400 font-bold">+18.4%</span>
+                    </div>
+                    <div className="mt-2 text-2xl font-bold font-mono tabular-nums text-white">
+                      +{earnings24h.toFixed(2)}
+                      <span className="text-xs font-normal text-slate-400 ml-1">USDT</span>
+                    </div>
+                    <span className="text-[11px] font-arabic text-slate-400 mt-1 block">عائدات آخر 24 ساعة</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-800/60 text-xs font-mono text-slate-400 flex items-center justify-between">
+                    <span>Engine:</span>
+                    <span className="text-emerald-400 font-semibold">ONLINE</span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-800/80 bg-[#0c101c] p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                      <span>UNITS MONETIZED</span>
+                      <span className="text-indigo-400 font-bold">100% Direct</span>
+                    </div>
+                    <div className="mt-2 text-2xl font-bold font-mono tabular-nums text-white">
+                      {totalProductsSold}
+                      <span className="text-xs font-normal text-slate-400 ml-1">Units</span>
+                    </div>
+                    <span className="text-[11px] font-arabic text-slate-400 mt-1 block">إجمالي المنتجات المباعة</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-800/60 text-xs font-mono text-slate-400 flex items-center justify-between">
+                    <span>Royalties:</span>
+                    <span className="text-indigo-400 font-semibold">Instant Payout</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-lg bg-slate-900/40 border border-slate-800/60 px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="font-mono text-slate-300">
+                    Latest activity: <span className="text-white font-medium">{transactions[0]?.title}</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 font-mono text-slate-400">
+                  <span className="text-emerald-400 font-bold tabular-nums">+{transactions[0]?.amount.toFixed(2)} USDT</span>
+                  <span>·</span>
+                  <span>{transactions[0]?.timestamp}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* 3. AUTOMATED PRODUCT GENERATOR */}
+            <section ref={generatorRef} className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                    <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">Automated Digital Product Generator</h2>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-400 font-arabic">
+                    توليد المنتجات الرقمية الاحترافية القابلة للبيع مباشرة في المتاجر ومنصات الويب3
+                  </p>
+                </div>
+                <div className="text-xs font-mono text-slate-400">
+                  <span>ENGINE: </span>
+                  <span className="text-indigo-400 font-semibold">NEXUS-V5 COGNITIVE CORE</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <div className="lg:col-span-7 rounded-2xl border border-slate-800 bg-[#090d16] p-5 sm:p-6 space-y-5 shadow-xl">
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono font-semibold text-slate-300 uppercase tracking-wider block">
+                      Select Target Product Category // التصنيف المستهدف
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {CATEGORIES.map(cat => {
+                        const isSelected = selectedCategory === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat.id)}
+                            className={`text-left p-3 rounded-xl border transition-all ${
+                              isSelected
+                                ? 'border-indigo-500/80 bg-indigo-950/30 text-white shadow-md'
+                                : 'border-slate-800/80 bg-[#0b0e18] text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <p className="text-xs font-bold text-slate-100">{cat.name}</p>
+                            <p className="text-[10px] text-slate-400 font-arabic mt-0.5">{cat.arabicName}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono font-semibold text-slate-300 uppercase tracking-wider block">
+                      Product Command Description // وصف وأمر التوليد
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={promptText}
+                      onChange={(e) => setPromptText(e.target.value)}
+                      placeholder="Describe the exact digital asset you want to automate..."
+                      className="w-full rounded-xl border border-slate-800 bg-[#06080f] px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 outline-none transition-all font-sans"
+                    />
+
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-mono text-slate-400">Quick Prompt Blueprints:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {CATEGORIES.find(c => c.id === selectedCategory)?.suggestedPrompts.map((sug, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              sfx.playClick();
+                              setPromptText(sug);
+                            }}
+                            className="text-[11px] text-slate-300 bg-slate-900 border border-slate-800 hover:border-slate-700 px-2.5 py-1 rounded-md transition-colors text-left"
+                          >
+                            {sug.slice(0, 40)}...
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/60">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-mono text-slate-400">TARGET RETAIL PRICE (USDT)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={5}
+                          max={500}
+                          value={targetPrice}
+                          onChange={(e) => setTargetPrice(Math.max(5, Number(e.target.value)))}
+                          className="w-full rounded-lg border border-slate-800 bg-[#06080f] px-3.5 py-2 font-mono text-sm text-white focus:border-indigo-500 outline-none"
+                        />
+                        <span className="absolute right-3 top-2 text-xs font-mono text-slate-400">USDT</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-mono text-slate-400">AUTOMATED SALES STREAM</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sfx.playClick();
+                          setAutoSalesStream(!autoSalesStream);
+                        }}
+                        className={`w-full py-2 px-3 rounded-lg border text-xs font-mono flex items-center justify-between transition-colors ${
+                          autoSalesStream 
+                            ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-300' 
+                            : 'border-slate-800 bg-slate-900 text-slate-400'
+                        }`}
+                      >
+                        <span>{autoSalesStream ? 'ACTIVE ROYALTY STREAM' : 'PAUSED'}</span>
+                        <span className={`h-2 w-2 rounded-full ${autoSalesStream ? 'bg-emerald-400 animate-ping' : 'bg-slate-600'}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isGenerating || !promptText.trim()}
+                    onClick={handleGenerateProduct}
+                    className="w-full relative group overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-500 py-3.5 px-6 font-semibold text-white shadow-xl shadow-indigo-600/30 hover:brightness-110 active:scale-[0.99] disabled:opacity-50 transition-all"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      {isGenerating ? (
+                        <>
+                          <IconRefreshCw className="h-4 w-4 animate-spin text-white" />
+                          <span className="font-mono text-sm">
+                            {generationStep === 1 && 'Parsing Cognitive Blueprint...'}
+                            {generationStep === 2 && 'Synthesizing Commercial Artifacts...'}
+                            {generationStep === 3 && 'Finalizing Web3 Packaging...'}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <IconSparkles className="h-4 w-4 text-emerald-200" />
+                          <span className="text-base tracking-wide">Generate Product with AI</span>
+                          <span className="text-xs font-arabic opacity-80 mr-1">توليد المنتج بالذكاء الاصطناعي</span>
+                        </>
+                      )}
+                    </div>
+                  </button>
+
+                </div>
+
+                <div className="lg:col-span-5 rounded-2xl border border-slate-800 bg-[#090d16] p-5 sm:p-6 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <div>
+                      <h3 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">OUTPUT INSPECTION</h3>
+                      <span className="text-[11px] font-arabic text-slate-400">معاينة وتصدير المنتج الرقمي</span>
+                    </div>
+                    {currentProduct && (
+                      <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                        ${currentProduct.priceUSDT} USDT
+                      </span>
+                    )}
+                  </div>
+
+                  {currentProduct && (
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{currentProduct.title}</h4>
+                        <p className="text-xs font-arabic text-indigo-300 mt-0.5">{currentProduct.arabicTitle}</p>
+                        <p className="text-xs text-slate-400 mt-1">{currentProduct.description}</p>
+                      </div>
+
+                      <div className="flex items-center gap-1 p-1 bg-slate-900 rounded-lg border border-slate-800 text-xs font-mono">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('preview')}
+                          className={`flex-1 py-1 px-2.5 rounded-md text-center transition-colors ${activeTab === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                        >
+                          Code / Formula
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('editor')}
+                          className={`flex-1 py-1 px-2.5 rounded-md text-center transition-colors ${activeTab === 'editor' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                        >
+                          Raw Text
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('commercial')}
+                          className={`flex-1 py-1 px-2.5 rounded-md text-center transition-colors ${activeTab === 'commercial' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                        >
+                          License
+                        </button>
+                      </div>
+
+                      <div className="relative rounded-xl border border-slate-800 bg-[#05070d] p-3.5 max-h-[220px] overflow-y-auto">
+                        {activeTab === 'commercial' ? (
+                          <div className="space-y-2 text-xs text-slate-300 font-mono">
+                            <p className="text-emerald-400 font-bold">✓ 100% COMMERCIAL UNRESTRICTED RESALE RIGHTS</p>
+                            <p className="text-slate-400">Authorized for direct packaging, SaaS bundling or on-chain escrow deployment.</p>
+                          </div>
+                        ) : (
+                          <pre className="text-xs font-mono text-emerald-300 whitespace-pre-wrap break-all leading-relaxed">
+                            {currentProduct.content}
+                          </pre>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(currentProduct.content, 'prod-copy')}
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200 hover:bg-slate-800 transition-colors"
+                        >
+                          {copiedId === 'prod-copy' ? <IconCheck className="h-3.5 w-3.5 text-emerald-400" /> : <IconCopy className="h-3.5 w-3.5" />}
+                          <span>{copiedId === 'prod-copy' ? 'Copied!' : 'Copy Code'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(currentProduct)}
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-xs font-mono text-slate-200 hover:bg-slate-800 transition-colors"
+                        >
+                          <IconDownload className="h-3.5 w-3.5" />
+                          <span>Download File</span>
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={triggerSimulatedSale}
+                        className="w-full py-2.5 px-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/40 text-xs font-mono font-semibold text-emerald-300 flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <IconZap className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Publish & Trigger Live Sale (+${currentProduct.priceUSDT} USDT)</span>
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </section>
+
+            {/* 4. INSTANT USDT PAYOUT GATEWAY */}
+            <section ref={payoutRef} className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                    <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">Instant USDT Payout Gateway</h2>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-400 font-arabic">
+                    بوابة السحب الفوري بالدولار الرقمي المشفر إلى محفظتك الخاصة دون تأخير
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
+                  <IconLock className="h-3.5 w-3.5" />
+                  <span>AES-256 ZERO-KNOWLEDGE SETTLEMENT</span>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-[#090d16] p-5 sm:p-7 shadow-2xl">
+                <div className="max-w-3xl mx-auto space-y-6">
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="font-mono font-semibold text-slate-300 uppercase tracking-wider">
+                        Select Payout Network // اختر شبكة التحويل
+                      </label>
+                      <span className="text-slate-400 font-mono text-[11px]">Lowest Gas: TRC-20 & Arbitrum</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {Object.keys(NETWORK_CONFIGS).map(netKey => {
+                        const cfg = NETWORK_CONFIGS[netKey];
+                        const isSelected = payoutNetwork === netKey;
+                        return (
+                          <button
+                            key={netKey}
+                            type="button"
+                            onClick={() => {
+                              sfx.playClick();
+                              setPayoutNetwork(netKey);
+                              setPayoutAddress(cfg.addressSample);
+                            }}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              isSelected
+                                ? 'border-emerald-500 bg-emerald-950/30 text-white shadow-lg'
+                                : 'border-slate-800 bg-[#0a0d17] text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold font-mono text-slate-100">{netKey}</span>
+                              <span className="text-[10px] font-mono text-emerald-400 font-semibold">{cfg.speed}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-1 truncate">{cfg.name}</p>
+                            <p className="text-[10px] font-mono text-slate-400 mt-0.5">Fee: ${cfg.fee.toFixed(2)}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="font-mono font-semibold text-slate-300 uppercase tracking-wider">
+                        Payout Amount // المبلغ المراد سحبه
+                      </label>
+                      <span className="font-mono text-slate-400">
+                        Max: <span className="text-white font-bold">{balanceUSDT.toFixed(2)} USDT</span>
+                      </span>
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="1"
+                        max={balanceUSDT}
+                        value={payoutAmount}
+                        onChange={(e) => setPayoutAmount(e.target.value)}
+                        placeholder="Enter USDT amount..."
+                        className="w-full rounded-xl border border-slate-800 bg-[#06080f] px-4 py-3 font-mono text-lg font-bold text-white placeholder-slate-600 focus:border-emerald-500 outline-none tabular-nums"
+                      />
+                      <div className="absolute right-3 top-2.5 flex items-center gap-1.5">
+                        <span className="text-xs font-mono font-bold text-emerald-400 mr-1">USDT</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sfx.playClick();
+                            setPayoutAmount((balanceUSDT * 0.5).toFixed(2));
+                          }}
+                          className="px-2 py-1 rounded bg-slate-800 text-[10px] font-mono hover:bg-slate-700 text-slate-300"
+                        >
+                          50%
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sfx.playClick();
+                            setPayoutAmount(balanceUSDT.toFixed(2));
+                          }}
+                          className="px-2 py-1 rounded bg-emerald-600 text-[10px] font-mono font-bold text-white hover:bg-emerald-500"
+                        >
+                          MAX
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="font-mono font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <IconShieldCheck className="h-4 w-4 text-emerald-400" />
+                        Public Destination Wallet // عنوان المحفظة العامة
+                      </label>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        {payoutNetwork === 'TRC20' ? 'Starts with T (Tron)' : 'Starts with 0x (EVM)'}
+                      </span>
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={payoutAddress}
+                        onChange={(e) => setPayoutAddress(e.target.value.trim())}
+                        placeholder={currentNetworkConfig.addressSample}
+                        className="w-full rounded-xl border border-slate-800 bg-[#06080f] px-4 py-3 font-mono text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:border-emerald-500 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          sfx.playClick();
+                          try {
+                            const clip = await navigator.clipboard.readText();
+                            if (clip) setPayoutAddress(clip.trim());
+                          } catch(err) {
+                            setPayoutAddress(currentNetworkConfig.addressSample);
+                          }
+                        }}
+                        className="absolute right-3 top-2.5 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300"
+                      >
+                        Paste
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 font-arabic">
+                      تأكد من اختيار الشبكة الصحيحة المطابقة لعنوان المحفظة لتجنب فقدان الأصول الرقمية.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800/80 bg-[#06080f] p-4 font-mono text-xs space-y-2">
+                    <div className="flex justify-between text-slate-400">
+                      <span>Gross Withdrawal:</span>
+                      <span className="text-white">${requestedNum.toFixed(2)} USDT</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Network Execution Gas Fee:</span>
+                      <span className="text-amber-400">-${currentNetworkConfig.fee.toFixed(2)} USDT</span>
+                    </div>
+                    <div className="pt-2 border-t border-slate-800 flex justify-between font-bold text-sm">
+                      <span className="text-slate-200">Net Received by Wallet:</span>
+                      <span className="text-emerald-400 text-base">${netReceived.toFixed(2)} USDT</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isPayoutProcessing || requestedNum <= 0 || requestedNum > balanceUSDT}
+                    onClick={handleExecutePayout}
+                    className="w-full relative group overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-indigo-600 py-4 px-6 font-bold text-white shadow-xl shadow-emerald-500/25 hover:brightness-110 active:scale-[0.99] disabled:opacity-40 transition-all"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <IconLock className="h-4 w-4 text-white" />
+                      <span className="text-base tracking-wide">Instant Payout Transfer</span>
+                      <span className="text-xs font-arabic opacity-85 mr-1">تنفيذ التحويل الفوري</span>
+                      <IconChevronRight className="h-4 w-4 text-white/80" />
+                    </div>
+                  </button>
+
+                </div>
+              </div>
+            </section>
+
+            {/* 5. ON-CHAIN SETTLEMENT LEDGER */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  <span>On-Chain Settlement Ledger</span>
+                  <span className="text-xs text-slate-400 font-arabic">سجل العمليات والتحويلات</span>
+                </h2>
+                <span className="text-xs font-mono text-slate-400">{transactions.length} Records</span>
+              </div>
+
+              <div className="overflow-x-auto rounded-xl border border-slate-800 bg-[#090d16]">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="bg-[#0b0e18] text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Description // البيان</th>
+                      <th className="px-4 py-3 text-right">Amount (USDT)</th>
+                      <th className="px-4 py-3 hidden sm:table-cell">TxHash</th>
+                      <th className="px-4 py-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {transactions.map(tx => (
+                      <tr key={tx.id} className="hover:bg-slate-900/40 transition-colors">
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          {tx.type === 'payout' ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                              <IconArrowUpRight className="h-3.5 w-3.5" /> PAYOUT
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-indigo-400 font-bold">
+                              <IconArrowDownRight className="h-3.5 w-3.5" /> SALE
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 font-sans">
+                          <p className="text-white font-medium text-xs leading-snug">{tx.title}</p>
+                          <p className="text-[11px] text-slate-400 font-arabic">{tx.arabicTitle}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap tabular-nums font-bold">
+                          <span className={tx.type === 'payout' ? 'text-slate-200' : 'text-emerald-400'}>
+                            {tx.type === 'payout' ? '-' : '+'}${tx.amount.toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 hidden sm:table-cell text-slate-400">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px]">{tx.txHash}</span>
+                            <button onClick={() => handleCopy(tx.txHash, tx.id)} className="hover:text-white">
+                              <IconCopy className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            CONFIRMED
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+          </main>
+
+          {/* FOOTER */}
+          <footer className="border-t border-slate-800/80 bg-[#05070c] py-8 mt-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white">Nexus AI</span>
+                <span>·</span>
+                <span className="font-arabic">منصة نكسوس الرقمية الذكية</span>
+                <span>·</span>
+                <span>Non-Custodial USDT Settlement</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    sfx.playClick();
+                    setBalanceUSDT(2845.50);
+                  }}
+                  className="hover:text-slate-200 transition-colors font-mono"
+                >
+                  Reset Demo Balance
+                </button>
+                <span>·</span>
+                <span className="font-mono text-slate-400">© 2026 Nexus AI Protocol</span>
+              </div>
+            </div>
+          </footer>
+
+          {/* WALLET CONNECT MODAL */}
+          {isWalletModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="relative w-full max-w-md rounded-2xl border border-slate-800 bg-[#090d16] p-6 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <IconWallet className="h-5 w-5 text-indigo-400" />
+                    <h3 className="text-base font-bold text-white">Connect Web3 Wallet</h3>
+                  </div>
+                  <button onClick={() => setIsWalletModalOpen(false)} className="text-slate-400 hover:text-white p-1">
+                    <IconX className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { name: 'TronLink Pro (TRC-20)', address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', net: 'TRC20' },
+                    { name: 'MetaMask (ERC-20 / L2)', address: '0x89A52e09B...43Eb87B', net: 'ERC20' },
+                    { name: 'Phantom Multi-Chain', address: '0x71C83e9b...a50F9a7', net: 'POLYGON' },
+                    { name: 'WalletConnect v2', address: '0xFd086bC...1C0b69F', net: 'ARBITRUM' }
+                  ].map((w, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        sfx.playSuccess();
+                        setConnectedWallet({ name: w.name, address: w.address, network: w.net });
+                        setIsWalletConnected(true);
+                        setIsWalletModalOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-[#06080f] hover:border-indigo-500/60 hover:bg-slate-900 transition-all text-left"
+                    >
+                      <div>
+                        <p className="text-xs font-bold text-white">{w.name}</p>
+                        <p className="text-[11px] font-mono text-slate-400">{w.address}</p>
+                      </div>
+                      <IconChevronRight className="h-4 w-4 text-slate-400" />
+                    </button>
+                  ))}
+                </div>
+
+                {isWalletConnected && (
+                  <button
+                    onClick={() => {
+                      sfx.playClick();
+                      setIsWalletConnected(false);
+                      setIsWalletModalOpen(false);
+                    }}
+                    className="w-full py-2.5 rounded-lg border border-red-500/30 bg-red-950/20 text-xs font-semibold text-red-400 hover:bg-red-950/40 transition-colors"
+                  >
+                    Disconnect Active Wallet
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PAYOUT SUCCESS MODAL */}
+          {payoutModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="relative w-full max-w-lg rounded-2xl border border-slate-800 bg-[#090d16] p-6 sm:p-7 shadow-2xl space-y-5">
+                
+                {payoutStep === 'broadcasting' && (
+                  <div className="text-center py-6 space-y-4">
+                    <IconRefreshCw className="h-10 w-10 text-emerald-400 animate-spin mx-auto" />
+                    <h3 className="text-lg font-bold text-white">Broadcasting to Blockchain Node</h3>
+                    <p className="text-xs font-mono text-slate-400">Routing transaction across {payoutNetwork} liquidity contracts...</p>
+                  </div>
+                )}
+
+                {payoutStep === 'confirming' && (
+                  <div className="text-center py-6 space-y-4">
+                    <IconShieldCheck className="h-10 w-10 text-indigo-400 mx-auto" />
+                    <h3 className="text-lg font-bold text-white">Validating Consensus Signatures</h3>
+                    <p className="text-xs font-mono text-slate-400">Confirmed 12/12 blocks. Dispatching USDT payload...</p>
+                  </div>
+                )}
+
+                {payoutStep === 'completed' && completedTxDetails && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <div>
+                        <h3 className="text-base font-bold text-white">Payout Dispatched Successfully</h3>
+                        <p className="text-xs font-arabic text-emerald-400">تم إرسال الأرباح بنجاح إلى محفظتك</p>
+                      </div>
+                      <button onClick={() => setPayoutModalOpen(false)} className="text-slate-400 hover:text-white p-1">
+                        <IconX className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-800 bg-[#05070d] p-4 font-mono text-xs space-y-2.5">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Net Dispatched:</span>
+                        <span className="text-emerald-400 font-bold text-sm">
+                          +${(completedTxDetails.amount - NETWORK_CONFIGS[payoutNetwork].fee).toFixed(2)} USDT
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Network Rail:</span>
+                        <span className="text-white font-semibold">{completedTxDetails.network}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Destination:</span>
+                        <span className="text-slate-200 truncate max-w-[240px]">{completedTxDetails.address}</span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-800 flex justify-between items-center">
+                        <span className="text-slate-400">Transaction Hash:</span>
+                        <span className="text-indigo-400 truncate max-w-[160px]">{completedTxDetails.txHash}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setPayoutModalOpen(false)}
+                      className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white text-xs shadow-lg shadow-emerald-600/30 transition-all"
+                    >
+                      Return to Workspace
+                    </button>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
