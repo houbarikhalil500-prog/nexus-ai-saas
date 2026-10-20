@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DigitalCraft.AI - Digital Products SaaS &amp; TRC20 Gateway</title>
-  <meta name="description" content="Single-file self-contained Digital Products SaaS platform powered by Gemini AI with TRC-20 USDT invoicing and dynamic receipts." />
+  <meta name="description" content="Single-file self-contained Digital Products SaaS platform powered by Gemini AI with TRC-20 USDT invoicing, dynamic receipts, and live Telegram support." />
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,6 +31,9 @@
   <!-- QRCode.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- html2pdf.js CDN for Flawless PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
     ::-webkit-scrollbar {
       width: 6px;
@@ -53,9 +56,24 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    /* Pulsing Glow Effect for Floating Telegram Support Widget */
+    @keyframes telegram-pulse {
+      0%, 100% {
+        box-shadow: 0 0 15px rgba(14, 165, 233, 0.7), 0 0 35px rgba(16, 185, 129, 0.4);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(14, 165, 233, 1), 0 0 50px rgba(16, 185, 129, 0.7);
+        transform: scale(1.06);
+      }
+    }
+    .telegram-glow {
+      animation: telegram-pulse 2.2s infinite ease-in-out;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200 relative pb-20 sm:pb-0">
 
   <!-- Top Announcement Bar -->
   <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 border-b border-emerald-500/20 px-3 py-1.5 text-xs">
@@ -106,7 +124,7 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs (Only User-Facing Tabs: Workspace, Invoices, Receipts) -->
+      <!-- Navigation Tabs (Only Active User-Facing Tabs) -->
       <nav class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-stretch sm:self-auto overflow-x-auto scrollbar-none">
         <button onclick="switchTab('workspace')" id="tabBtn-workspace" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20">
           <i class="fa-solid fa-sparkles"></i>
@@ -124,7 +142,7 @@
     </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- Main Content Container -->
   <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 flex flex-col space-y-6">
 
     <!-- ========================================== -->
@@ -246,21 +264,85 @@
         </div>
       </div>
 
-      <!-- Generated Asset Output Box -->
-      <div id="outputCard" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-        <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-400"></i>
-            <span class="text-xs font-bold text-white uppercase tracking-wider">المنتج الرقمي المُولّد بنجاح</span>
+      <!-- ============================================================== -->
+      <!-- GENERATED ASSET OUTPUT CONTAINER WITH ACTIONS & LIVE COUNTERS   -->
+      <!-- ============================================================== -->
+      <div id="outputCard" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl space-y-0">
+        <!-- Top Toolbar Header with Live Counters and 4 Functional Action Buttons -->
+        <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          
+          <!-- Live Word & Character Counter -->
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-emerald-400"></i>
+              <span>المنتج الرقمي:</span>
+            </span>
+
+            <div class="flex items-center gap-3 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-font text-emerald-400 text-[10px]"></i>
+                <span>الكلمات:</span>
+                <strong id="wordCountDisplay" class="text-white">0</strong>
+              </span>
+              <span class="text-slate-600">|</span>
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-hashtag text-cyan-400 text-[10px]"></i>
+                <span>الحروف:</span>
+                <strong id="charCountDisplay" class="text-white">0</strong>
+              </span>
+            </div>
           </div>
 
-          <button onclick="copyOutputContent()" id="copyOutputBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200">
-            <i class="fa-regular fa-copy"></i>
-            <span id="copyOutputText">نسخ المحتوى</span>
-          </button>
+          <!-- 4 Core Functional Action Buttons -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <!-- 1. Copy Button -->
+            <button
+              onclick="copyOutputContent()"
+              id="copyOutputBtn"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200"
+              title="نسخ النص إلى الحافظة"
+            >
+              <i class="fa-regular fa-copy text-emerald-400"></i>
+              <span id="copyOutputText">نسخ النص (Copy)</span>
+            </button>
+
+            <!-- 2. Download PDF Button -->
+            <button
+              onclick="downloadPDF()"
+              id="downloadPdfBtn"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200"
+              title="تصدير النص كملف PDF"
+            >
+              <i class="fa-solid fa-file-pdf text-rose-400"></i>
+              <span id="downloadPdfText">تحميل PDF (Download PDF)</span>
+            </button>
+
+            <!-- 3. Expand Text Button -->
+            <button
+              onclick="handleExpandText()"
+              id="expandBtn"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200"
+              title="إعادة التوليد بتفصيل أعمق"
+            >
+              <i class="fa-solid fa-up-right-and-down-left-from-center text-cyan-400"></i>
+              <span id="expandBtnText">توسيع النص (Expand Text)</span>
+            </button>
+
+            <!-- 4. Shorten Text Button -->
+            <button
+              onclick="handleShortenText()"
+              id="shortenBtn"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200"
+              title="تلخيص واختصار المخرجات"
+            >
+              <i class="fa-solid fa-down-left-and-up-right-to-center text-amber-400"></i>
+              <span id="shortenBtnText">اختصار النص (Shorten Text)</span>
+            </button>
+          </div>
         </div>
 
-        <div class="p-4 sm:p-6 bg-slate-950/70 overflow-x-auto max-h-[550px]" dir="ltr">
+        <!-- Output Content Box (Container for PDF Export) -->
+        <div id="pdfExportContainer" class="p-4 sm:p-6 bg-slate-950/70 overflow-x-auto max-h-[550px]" dir="ltr">
           <pre id="outputPre" class="text-xs sm:text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed select-all text-left"></pre>
         </div>
       </div>
@@ -418,6 +500,28 @@
     </section>
   </main>
 
+  <!-- ============================================================== -->
+  <!-- FLOATING TELEGRAM LIVE SUPPORT WIDGET (BOTTOM CORNER WITH GLOW)-->
+  <!-- ============================================================== -->
+  <aside class="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 group flex items-center gap-2.5">
+    <!-- Tooltip / Label -->
+    <div class="hidden sm:flex items-center gap-2 bg-slate-900/90 text-white border border-slate-700/80 px-3.5 py-2 rounded-2xl shadow-2xl text-xs font-semibold backdrop-blur opacity-90 group-hover:opacity-100 transition">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>الدعم الفني المباشر تليجرام</span>
+    </div>
+
+    <!-- Pulsing Glow Telegram Circle Button -->
+    <a
+      href="https://t.me/DigitalCraftSupport"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Contact Telegram Live Support"
+      class="w-14 h-14 rounded-full bg-gradient-to-tr from-sky-600 via-cyan-500 to-emerald-400 flex items-center justify-center text-white text-2xl shadow-2xl telegram-glow hover:scale-110 active:scale-95 transition-transform duration-200"
+    >
+      <i class="fa-brands fa-telegram text-3xl drop-shadow"></i>
+    </a>
+  </aside>
+
   <!-- Footer -->
   <footer class="border-t border-slate-900 bg-slate-950 px-4 py-4 mt-auto">
     <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
@@ -522,6 +626,14 @@
       localStorage.setItem("digitalcraft_credits", userCredits.toString());
     }
 
+    // Dynamic Word & Character Counter
+    function updateTextCounters(text) {
+      const charCount = text ? text.length : 0;
+      const wordCount = text && text.trim() ? text.trim().split(/\s+/).length : 0;
+      document.getElementById("wordCountDisplay").innerText = wordCount.toLocaleString();
+      document.getElementById("charCountDisplay").innerText = charCount.toLocaleString();
+    }
+
     function renderPlans() {
       const container = document.getElementById("plansGrid");
       container.innerHTML = "";
@@ -591,6 +703,35 @@
       }
     }
 
+    // Generic API Call to Gemini
+    async function callGemini(promptText, systemInstruction) {
+      const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+      for (const m of models) {
+        try {
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`;
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              systemInstruction: { parts: [{ text: systemInstruction }] }
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (candidateText) {
+              return candidateText;
+            }
+          }
+        } catch (e) {
+          console.warn(`Model ${m} call failure:`, e);
+        }
+      }
+      return null;
+    }
+
     // MAIN GENERATION FUNCTION WITH DIRECT PROMPT TEXT
     async function handleGenerateProduct() {
       const prompt = document.getElementById("promptInput").value.trim();
@@ -621,36 +762,10 @@ Target Audience Context: "${audience}".
 Format output beautifully with clear titles, markdown tables, code/formula blocks if technical, and bullet points.
 Support Arabic and English natively. Provide thorough, high-value, professional content without filler.`;
 
-      const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-flash-latest"];
-      let textResult = null;
+      const result = await callGemini(prompt, systemInstruction);
 
-      for (const m of models) {
-        try {
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`;
-          const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              systemInstruction: { parts: [{ text: systemInstruction }] }
-            })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (candidateText) {
-              textResult = candidateText;
-              break;
-            }
-          }
-        } catch (callErr) {
-          console.warn(`Model ${m} call attempt:`, callErr);
-        }
-      }
-
-      if (textResult) {
-        displayOutput(textResult);
+      if (result) {
+        displayOutput(result);
         userCredits = Math.max(0, userCredits - 5);
         updateCreditsUI();
       } else {
@@ -666,8 +781,158 @@ Support Arabic and English natively. Provide thorough, high-value, professional 
 
     function displayOutput(text) {
       document.getElementById("outputPre").innerText = text;
+      updateTextCounters(text);
       document.getElementById("outputCard").classList.remove("hidden");
       document.getElementById("outputCard").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // 1. Copy Function
+    function copyOutputContent() {
+      const text = document.getElementById("outputPre").innerText;
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      const textEl = document.getElementById("copyOutputText");
+      const original = textEl.innerText;
+      textEl.innerText = "تم النسخ!";
+      setTimeout(() => textEl.innerText = original, 2500);
+    }
+
+    // 2. Clean Download PDF Function
+    function downloadPDF() {
+      const text = document.getElementById("outputPre").innerText;
+      if (!text) {
+        alert("لا يوجد نص لتحميله!");
+        return;
+      }
+
+      const downloadPdfText = document.getElementById("downloadPdfText");
+      const origText = downloadPdfText.innerText;
+      downloadPdfText.innerText = "جاري إنشاء PDF...";
+
+      // Use html2pdf if available for formatted export
+      if (typeof html2pdf !== "undefined") {
+        const element = document.createElement("div");
+        element.style.padding = "30px";
+        element.style.color = "#111827";
+        element.style.backgroundColor = "#ffffff";
+        element.style.fontFamily = "sans-serif";
+        element.style.lineHeight = "1.6";
+        element.innerHTML = `
+          <div style="border-bottom: 2px solid #10b981; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="color: #065f46; font-size: 20px; margin: 0;">DigitalCraft.AI - Generated Asset</h1>
+            <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Exported via DigitalCraft AI Studio Platform</p>
+          </div>
+          <pre style="white-space: pre-wrap; font-family: monospace; font-size: 12px; color: #1f2937;">${text}</pre>
+        `;
+
+        const opt = {
+          margin: 10,
+          filename: 'digitalcraft-product.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+          downloadPdfText.innerText = origText;
+        }).catch(err => {
+          console.warn("html2pdf fallback to print:", err);
+          fallbackPrint(text);
+          downloadPdfText.innerText = origText;
+        });
+        return;
+      }
+
+      fallbackPrint(text);
+      downloadPdfText.innerText = origText;
+    }
+
+    function fallbackPrint(text) {
+      const printWin = window.open("", "_blank");
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>DigitalCraft.AI Export</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
+            pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; }
+          </style>
+        </head>
+        <body>
+          <h2 style="color: #059669;">DigitalCraft.AI Digital Asset</h2>
+          <hr />
+          <pre>${text}</pre>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
+    }
+
+    // 3. Expand Text Function
+    async function handleExpandText() {
+      const currentText = document.getElementById("outputPre").innerText;
+      if (!currentText || isGenerating) return;
+
+      if (userCredits < 3) {
+        alert("تحتاج إلى 3 أرصدة على الأقل لتوسيع النص!");
+        switchTab("invoicing");
+        return;
+      }
+
+      const expandBtnText = document.getElementById("expandBtnText");
+      const originalText = expandBtnText.innerText;
+      expandBtnText.innerText = "جاري التوسيع...";
+      isGenerating = true;
+
+      const instruction = "You are an elite Digital Product Expander. Expand the provided text significantly, making it much more in-depth, thorough, structured, and extensive with practical step-by-step frameworks, formulas, or scripts without losing the original meaning.";
+      const prompt = `Please expand and elaborate in extreme detail on this digital product:\n\n${currentText}`;
+
+      const expanded = await callGemini(prompt, instruction);
+      if (expanded) {
+        displayOutput(expanded);
+        userCredits = Math.max(0, userCredits - 3);
+        updateCreditsUI();
+      } else {
+        alert("تعذر توسيع النص حالياً، يرجى المحاولة لاحقاً.");
+      }
+
+      expandBtnText.innerText = originalText;
+      isGenerating = false;
+    }
+
+    // 4. Shorten Text Function
+    async function handleShortenText() {
+      const currentText = document.getElementById("outputPre").innerText;
+      if (!currentText || isGenerating) return;
+
+      if (userCredits < 2) {
+        alert("تحتاج إلى رصيدين على الأقل لاختصار النص!");
+        switchTab("invoicing");
+        return;
+      }
+
+      const shortenBtnText = document.getElementById("shortenBtnText");
+      const originalText = shortenBtnText.innerText;
+      shortenBtnText.innerText = "جاري الاختصار...";
+      isGenerating = true;
+
+      const instruction = "You are an expert editor. Condense, tighten, and summarize the provided digital product content into its highest-density key takeaways, action steps, and essentials without any filler.";
+      const prompt = `Please condense and summarize the core elements of this digital product into a punchy executive summary:\n\n${currentText}`;
+
+      const shortened = await callGemini(prompt, instruction);
+      if (shortened) {
+        displayOutput(shortened);
+        userCredits = Math.max(0, userCredits - 2);
+        updateCreditsUI();
+      } else {
+        alert("تعذر اختصار النص حالياً، يرجى المحاولة لاحقاً.");
+      }
+
+      shortenBtnText.innerText = originalText;
+      isGenerating = false;
     }
 
     function displayDynamicFallback(promptText, audience) {
@@ -802,14 +1067,6 @@ Support Arabic and English natively. Provide thorough, high-value, professional 
       const textEl = document.getElementById("copyAddressText");
       textEl.innerText = "تم نسخ العنوان!";
       setTimeout(() => textEl.innerText = "نسخ عنوان المحفظة", 2500);
-    }
-
-    function copyOutputContent() {
-      const text = document.getElementById("outputPre").innerText;
-      navigator.clipboard.writeText(text);
-      const textEl = document.getElementById("copyOutputText");
-      textEl.innerText = "تم النسخ!";
-      setTimeout(() => textEl.innerText = "نسخ المحتوى", 2500);
     }
 
     window.addEventListener("DOMContentLoaded", () => {
