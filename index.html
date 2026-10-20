@@ -106,23 +106,19 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
+      <!-- Navigation Tabs (Only User-Facing Tabs: Workspace, Invoices, Receipts) -->
       <nav class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-stretch sm:self-auto overflow-x-auto scrollbar-none">
-        <button onclick="switchTab('workspace')" id="tabBtn-workspace" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20">
+        <button onclick="switchTab('workspace')" id="tabBtn-workspace" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20">
           <i class="fa-solid fa-sparkles"></i>
           <span>استوديو الذكاء الاصطناعي</span>
         </button>
-        <button onclick="switchTab('invoicing')" id="tabBtn-invoicing" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
+        <button onclick="switchTab('invoicing')" id="tabBtn-invoicing" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
           <i class="fa-solid fa-wallet"></i>
           <span>الفواتير والشحن</span>
         </button>
-        <button onclick="switchTab('receipts')" id="tabBtn-receipts" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
+        <button onclick="switchTab('receipts')" id="tabBtn-receipts" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
           <i class="fa-solid fa-file-invoice"></i>
           <span>الإيصالات (<span id="receiptsCount">1</span>)</span>
-        </button>
-        <button onclick="switchTab('code')" id="tabBtn-code" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
-          <i class="fa-solid fa-code"></i>
-          <span>الإعدادات</span>
         </button>
       </nav>
     </div>
@@ -131,8 +127,11 @@
   <!-- Main Container -->
   <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 flex flex-col space-y-6">
 
-    <!-- TAB 1: AI STUDIO / OPEN PROMPT WORKSPACE -->
+    <!-- ========================================== -->
+    <!-- TAB 1: AI STUDIO / OPEN PROMPT WORKSPACE   -->
+    <!-- ========================================== -->
     <section id="view-workspace" class="space-y-6">
+      <!-- Studio Header Banner -->
       <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/40 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
@@ -267,7 +266,9 @@
       </div>
     </section>
 
-    <!-- TAB 2: INVOICES & TRC20 CRYPTOPAY GATEWAY -->
+    <!-- ========================================== -->
+    <!-- TAB 2: INVOICES & TRC20 CRYPTOPAY GATEWAY  -->
+    <!-- ========================================== -->
     <section id="view-invoicing" class="hidden space-y-6">
       <div>
         <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
@@ -286,6 +287,7 @@
 
       <!-- Settlement Area -->
       <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
+        <!-- Target Reception Wallet -->
         <div class="md:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2">
@@ -334,6 +336,7 @@
           </div>
         </div>
 
+        <!-- Right: QR Code & TxID Submission -->
         <div class="md:col-span-5 space-y-4">
           <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center">
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
@@ -389,7 +392,9 @@
       </div>
     </section>
 
-    <!-- TAB 3: VERIFIED TRC20 RECEIPTS -->
+    <!-- ========================================== -->
+    <!-- TAB 3: VERIFIED TRC20 RECEIPTS             -->
+    <!-- ========================================== -->
     <section id="view-receipts" class="hidden space-y-4">
       <div class="flex items-center justify-between">
         <div>
@@ -411,46 +416,6 @@
 
       <div id="receiptsList" class="space-y-3"></div>
     </section>
-
-    <!-- TAB 4: CONFIGURATION & EMBEDDED KEYS -->
-    <section id="view-code" class="hidden space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-code text-emerald-400"></i>
-            <span>الإعدادات والبيانات الثابتة المدمجة</span>
-          </h2>
-          <p class="text-xs text-slate-400">
-            المفاتيح الدائمة المدمجة في هذا الملف المفرد.
-          </p>
-        </div>
-
-        <button onclick="copyConfigBlock()" id="copyConfigBtn" class="py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950">
-          <i class="fa-regular fa-copy"></i>
-          <span id="copyConfigText">نسخ كود الإعدادات</span>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" dir="ltr">
-        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5 text-left">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            1. Embedded Gemini API Key
-          </span>
-          <p id="geminiKeyDisplay" class="font-mono text-xs text-emerald-400 break-all bg-slate-950 p-2.5 rounded-lg border border-slate-800"></p>
-        </div>
-
-        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5 text-left">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            2. Target USDT TRC20 Wallet Address
-          </span>
-          <p id="trc20WalletDisplay" class="font-mono text-xs text-cyan-300 break-all bg-slate-950 p-2.5 rounded-lg border border-slate-800"></p>
-        </div>
-      </div>
-
-      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed text-left" dir="ltr">
-        <pre id="configSnippetCode"></pre>
-      </div>
-    </section>
   </main>
 
   <!-- Footer -->
@@ -469,9 +434,11 @@
     </div>
   </footer>
 
-  <!-- State & Logic -->
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT STATE & APPLICATION LOGIC       -->
+  <!-- ========================================== -->
   <script>
-    // HARDCODED PRODUCTION CONFIGURATION KEYS
+    // HARDCODED PRODUCTION CONFIGURATION KEYS (OPERATIONAL IN BACKGROUND)
     const GEMINI_API_KEY = "AQ.Ab8RN6I1EF_xWK1LSYpKXtMZ4JKU-2TP-4VbPf40up706Ab_Yg";
     const TRC20_WALLET = "TYnJW395RFhCnpowLBtEiHWys88tg5FeiU";
     const NETWORK_NAME = "TRON (TRC-20)";
@@ -528,16 +495,18 @@
 
     function switchTab(tabId) {
       currentTab = tabId;
-      const views = ["workspace", "invoicing", "receipts", "code"];
+      const views = ["workspace", "invoicing", "receipts"];
       views.forEach(v => {
         const el = document.getElementById("view-" + v);
         const btn = document.getElementById("tabBtn-" + v);
-        if (v === tabId) {
-          el.classList.remove("hidden");
-          btn.className = "nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        } else {
-          el.classList.add("hidden");
-          btn.className = "nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900";
+        if (el && btn) {
+          if (v === tabId) {
+            el.classList.remove("hidden");
+            btn.className = "nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+          } else {
+            el.classList.add("hidden");
+            btn.className = "nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900";
+          }
         }
       });
 
@@ -843,31 +812,14 @@ Support Arabic and English natively. Provide thorough, high-value, professional 
       setTimeout(() => textEl.innerText = "نسخ المحتوى", 2500);
     }
 
-    function copyConfigBlock() {
-      const snippet = document.getElementById("configSnippetCode").innerText;
-      navigator.clipboard.writeText(snippet);
-      const textEl = document.getElementById("copyConfigText");
-      textEl.innerText = "تم نسخ الإعدادات!";
-      setTimeout(() => textEl.innerText = "نسخ كود الإعدادات", 2500);
-    }
-
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("walletAddressDisplay").innerText = TRC20_WALLET;
-      document.getElementById("geminiKeyDisplay").innerText = `"${GEMINI_API_KEY}"`;
-      document.getElementById("trc20WalletDisplay").innerText = `"${TRC20_WALLET}"`;
       document.getElementById("footerWalletShort").innerText = TRC20_WALLET.slice(0, 6) + "..." + TRC20_WALLET.slice(-6);
       document.getElementById("headerExplorerLink").href = TRONSCAN_ADDRESS_URL;
       document.getElementById("tronScanAddressBtn").href = TRONSCAN_ADDRESS_URL;
 
+      // Default prompt example in textarea
       document.getElementById("promptInput").value = "أنشئ جدول بيانات مالي متكامل لمدة 12 شهراً لشركة برمجيات SaaS مع حساب الإيرادات وتكلفة الاستحواذ CAC والقيمة الدائمة LTV ونسب النمو الشهري.";
-
-      document.getElementById("configSnippetCode").innerText = `// =====================================================================
-// DIGITALCRAFT.AI - SINGLE-FILE STATIC PRODUCTION CONFIGURATION
-// =====================================================================
-const GEMINI_API_KEY = "${GEMINI_API_KEY}";
-const TRC20_WALLET = "${TRC20_WALLET}";
-const NETWORK_NAME = "TRON (TRC-20)";
-const TRONSCAN_URL = "https://tronscan.org/#/address/" + TRC20_WALLET;`;
 
       updateCreditsUI();
       selectPlan(INVOICE_PLANS[1]);
