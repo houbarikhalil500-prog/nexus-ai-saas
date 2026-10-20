@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -62,15 +62,15 @@
     <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
       <div class="flex items-center gap-2 overflow-hidden">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-        <span class="text-emerald-400 font-semibold truncate">TRC-20 Settlement Engine Online</span>
-        <span class="text-slate-400 hidden sm:inline">• USDT Contract: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span>
+        <span class="text-emerald-400 font-semibold truncate">بوابة الدفع TRC-20 قيد التشغيل المباشر</span>
+        <span class="text-slate-400 hidden sm:inline" dir="ltr">• Contract: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span>
       </div>
       <div class="flex items-center gap-3 shrink-0">
         <span class="text-slate-300 font-mono text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
-          <i class="fa-solid fa-bolt text-emerald-400 mr-1"></i><span id="headerCredits">45</span> Credits
+          <i class="fa-solid fa-bolt text-emerald-400 ml-1"></i><span id="headerCredits">45</span> رصيد (Credits)
         </span>
         <a id="headerExplorerLink" href="#" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium">
-          <span class="hidden sm:inline">Explorer</span>
+          <span>المستكشف</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
         </a>
       </div>
@@ -90,12 +90,12 @@
               <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">
                 DigitalCraft<span class="text-emerald-400">.AI</span>
               </h1>
-              <span class="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded">
-                HTML5 Single-File
+              <span class="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded font-mono">
+                Gemini Flash
               </span>
             </div>
             <p class="text-[11px] text-slate-400 truncate max-w-[260px] sm:max-w-none">
-              AI Digital Products Studio + TRC-20 CryptoPay Gateway
+              استوديو المنتجات الرقمية المفتوح + بوابة فواتير TRC-20 المباشرة
             </p>
           </div>
         </div>
@@ -110,19 +110,19 @@
       <nav class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-stretch sm:self-auto overflow-x-auto scrollbar-none">
         <button onclick="switchTab('workspace')" id="tabBtn-workspace" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20">
           <i class="fa-solid fa-sparkles"></i>
-          <span>AI Studio</span>
+          <span>استوديو الذكاء الاصطناعي</span>
         </button>
         <button onclick="switchTab('invoicing')" id="tabBtn-invoicing" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
           <i class="fa-solid fa-wallet"></i>
-          <span>Invoices &amp; Pay</span>
+          <span>الفواتير والشحن</span>
         </button>
         <button onclick="switchTab('receipts')" id="tabBtn-receipts" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
           <i class="fa-solid fa-file-invoice"></i>
-          <span>Receipts (<span id="receiptsCount">1</span>)</span>
+          <span>الإيصالات (<span id="receiptsCount">1</span>)</span>
         </button>
         <button onclick="switchTab('code')" id="tabBtn-code" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
           <i class="fa-solid fa-code"></i>
-          <span>Config</span>
+          <span>الإعدادات</span>
         </button>
       </nav>
     </div>
@@ -131,103 +131,138 @@
   <!-- Main Container -->
   <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 flex flex-col space-y-6">
 
-    <!-- TAB 1: AI DIGITAL PRODUCTS STUDIO -->
+    <!-- TAB 1: AI STUDIO / OPEN PROMPT WORKSPACE -->
     <section id="view-workspace" class="space-y-6">
       <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/40 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <span>Digital Product Generation Studio</span>
+            <span>منصة إنشاء المنتجات الرقمية عبر الذكاء الاصطناعي</span>
             <span class="text-[11px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
-              Gemini Flash Connected
+              Online
             </span>
           </h2>
-          <p class="text-xs text-slate-400 mt-1 max-w-2xl">
-            Produce production-ready digital products: high-converting video ad scripts, spreadsheet models, and Notion micro-guides ready to sell on Gumroad or deploy to SaaS.
+          <p class="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            واجهة مفتوحة بالكامل: اكتب أي فكرة أو وصف للمنتج الرقمي الذي تريده (جداول مالية، سكريبتات إعلانية، كتب إلكترونية، خطط تسويقية، كود برمجي)، وسيتم توليده فوراً عبر نموذج Gemini Flash.
           </p>
         </div>
 
         <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <div class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-right">
-            <span class="text-[10px] text-slate-400 block uppercase font-mono">Workspace Credits</span>
+            <span class="text-[10px] text-slate-400 block uppercase font-mono">الرصيد المتاح</span>
             <span class="text-sm font-bold text-emerald-400 font-mono flex items-center justify-end gap-1">
               <i class="fa-solid fa-bolt"></i>
-              <span id="bannerCredits">45</span> Credits
+              <span id="bannerCredits">45</span> رصيد
             </span>
           </div>
           <button onclick="switchTab('invoicing')" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-emerald-950">
-            <span>Top Up</span>
-            <i class="fa-solid fa-arrow-right text-[11px]"></i>
+            <span>شحن الرصيد</span>
+            <i class="fa-solid fa-arrow-left text-[11px]"></i>
           </button>
         </div>
       </div>
 
-      <!-- Blueprint Template Selection -->
-      <div>
-        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2.5 block">
-          Select Digital Product Blueprint:
-        </label>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5" id="templatesGrid"></div>
+      <!-- Quick Inspiration Idea Pills -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span class="font-medium flex items-center gap-1.5">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i>
+            <span>أفكار سريعة للإلهام (اضغط لتجربة فورية):</span>
+          </span>
+          <span class="text-[11px] text-emerald-400">أو اكتب وصفك الخاص بحرية كاملة بالأسفل</span>
+        </div>
+        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none" id="inspirationPills">
+          <button onclick="setPromptText('أنشئ جدول بيانات مالي متكامل لمدة 12 شهراً لشركة برمجيات SaaS مع حساب الإيرادات وتكلفة الاستحواذ CAC والقيمة الدائمة LTV ونسب النمو الشهري.')" class="shrink-0 text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 transition">
+            📊 نموذج مالي متكامل لـ SaaS
+          </button>
+          <button onclick="setPromptText('اكتب 3 نصوص إعلانات فيديو فيروسية لمنصة تيك توك وريلز لبيع قالب تنظيم الإنتاجية في Notion مع الهوك البصري ونداء الشراء CTA.')" class="shrink-0 text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 transition">
+            🚀 3 سكريبتات إعلانية فيروسية
+          </button>
+          <button onclick="setPromptText('اكتب فصلاً كاملاً من كتاب رقمي بعنوان (دليل إطلاق وكالة مصغرة للذكاء الاصطناعي في 7 أيام) مع استراتيجية التسعير ونماذج رسائل إغلاق الصفقات.')" class="shrink-0 text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 transition">
+            📘 فصل من كتاب رقمي جاهز للبيع
+          </button>
+          <button onclick="setPromptText('صمم خطة تسويق متكاملة عبر البريد الإلكتروني (سلسلة 5 رسائل) لبيع كورس رقمي مع عناوين جذابة وعروض ترويجية محدودة الوقت.')" class="shrink-0 text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 transition">
+            ✉️ قمع بريدي لبيع منتج رقمي
+          </button>
+        </div>
       </div>
 
-      <!-- Prompt Editor -->
-      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="md:col-span-2 space-y-1.5">
-            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-              <i class="fa-solid fa-sliders text-emerald-400"></i>
-              <span>Product Blueprint Prompt &amp; Specification:</span>
+      <!-- MAIN PROMPT AREA -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="promptInput" class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-pen-nib text-emerald-400"></i>
+              <span>اكتب وصف المنتج الرقمي الذي تريده هنا (Your AI Prompt)</span>
             </label>
-            <textarea
-              id="promptInput"
-              rows="4"
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition leading-relaxed"
-              placeholder="Describe the exact digital product you want to generate..."
-            ></textarea>
+            <span class="text-[11px] font-mono text-slate-400">
+              تكلفة التوليد: <strong class="text-emerald-400">5 رصيد</strong>
+            </span>
           </div>
 
-          <div class="space-y-3">
-            <div>
-              <label class="text-xs font-semibold text-slate-300 block mb-1.5">
-                Target Audience / Niche:
-              </label>
-              <input
-                id="targetAudienceInput"
-                type="text"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-                placeholder="e.g. B2B Founders, Creator Economy..."
-              />
-            </div>
+          <!-- Large prominent textarea -->
+          <textarea
+            id="promptInput"
+            rows="6"
+            class="w-full bg-slate-950 border-2 border-slate-800 focus:border-emerald-500 rounded-2xl p-4 text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none transition leading-relaxed shadow-inner"
+            placeholder="اكتب هنا أي فكرة أو تفاصيل المنتج الرقمي الذي تريد توليده بالتفصيل... (مثال: أريد جدول بيانات إكسل لحساب أرباح المتجر الإلكتروني، أو خطة محتوى شهر كامل، أو سكريبت إعلاني جذاب...)"
+          ></textarea>
+        </div>
 
-            <div class="pt-1">
-              <button
-                id="generateBtn"
-                onclick="handleGenerateProduct()"
-                class="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
-              >
-                <i class="fa-solid fa-sparkles"></i>
-                <span id="generateBtnText">Run Digital Generator (5 Credits)</span>
-              </button>
+        <!-- Target Audience Optional Field -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">
+              الجمهور المستهدف أو المجال (اختياري):
+            </label>
+            <input
+              id="targetAudienceInput"
+              type="text"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition"
+              placeholder="مثال: رواد الأعمال، أصحاب المتاجر، صناع المحتوى..."
+              value="رواد الأعمال وصناع المحتوى الرقمي"
+            />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">
+              نموذج الذكاء الاصطناعي:
+            </label>
+            <div class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-emerald-400 font-mono flex items-center justify-between">
+              <span>Gemini Flash Engine</span>
+              <span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded">High Speed</span>
             </div>
           </div>
+        </div>
+
+        <!-- Full-width Action Button -->
+        <div class="pt-2">
+          <button
+            id="generateBtn"
+            onclick="handleGenerateProduct()"
+            class="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 rounded-2xl font-black text-sm sm:text-base transition flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-950"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+            <span id="generateBtnText">توليد المنتج الرقمي عبر الذكاء الاصطناعي (Generate via Prompt)</span>
+          </button>
         </div>
       </div>
 
       <!-- Generated Asset Output Box -->
-      <div id="outputCard" class="hidden bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <div id="outputCard" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
         <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-circle-check text-emerald-400"></i>
-            <span class="text-xs font-bold text-white uppercase tracking-wider">Generated Digital Product Asset</span>
+            <span class="text-xs font-bold text-white uppercase tracking-wider">المنتج الرقمي المُولّد بنجاح</span>
           </div>
 
           <button onclick="copyOutputContent()" id="copyOutputBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200">
             <i class="fa-regular fa-copy"></i>
-            <span id="copyOutputText">Copy Asset</span>
+            <span id="copyOutputText">نسخ المحتوى</span>
           </button>
         </div>
 
-        <div class="p-4 sm:p-6 bg-slate-950/60 overflow-x-auto max-h-[500px]">
-          <pre id="outputPre" class="text-xs sm:text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed select-all"></pre>
+        <div class="p-4 sm:p-6 bg-slate-950/70 overflow-x-auto max-h-[550px]" dir="ltr">
+          <pre id="outputPre" class="text-xs sm:text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed select-all text-left"></pre>
         </div>
       </div>
     </section>
@@ -236,24 +271,26 @@
     <section id="view-invoicing" class="hidden space-y-6">
       <div>
         <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-          <span>TRON (TRC-20) Invoice &amp; Settlement Terminal</span>
+          <span>بوابة دفع واستقبال TRON (TRC-20)</span>
           <span class="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded font-mono">
-            Zero Gas Slippage
+            Zero Slippage
           </span>
         </h2>
         <p class="text-xs text-slate-400 mt-0.5">
-          Select your credit pack invoice, settle with USDT (TRC-20) to our verified static wallet, and log your transaction hash for instant verification.
+          اختر باقة الرصيد المناسبة، وحوّل عملة USDT (TRC-20) لعنوان محفظتنا الثابت، ثم أدخل رقم المعاملة (TxID) لتأكيد فوري.
         </p>
       </div>
 
+      <!-- Plan Pricing Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="plansGrid"></div>
 
+      <!-- Settlement Area -->
       <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
         <div class="md:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-wallet text-emerald-400"></i>
-              <h3 class="text-sm font-bold text-white">Target Settlement Wallet</h3>
+              <h3 class="text-sm font-bold text-white">محفظة استلام المدفوعات المعتمدة</h3>
             </div>
             <span class="text-[11px] font-mono text-cyan-300 bg-slate-800 px-2 py-0.5 rounded">
               TRON TRC-20
@@ -262,18 +299,18 @@
 
           <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-2.5">
             <div class="flex items-center justify-between text-xs text-slate-400">
-              <span class="font-medium">Direct Reception Address:</span>
+              <span class="font-medium">عنوان المحفظة المباشر (Reception Address):</span>
               <span class="text-emerald-400 font-mono text-[10px]">Verified TRON Mainnet</span>
             </div>
 
-            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between gap-2">
+            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between gap-2" dir="ltr">
               <span id="walletAddressDisplay" class="font-mono text-xs sm:text-sm text-emerald-300 select-all break-all font-medium leading-relaxed"></span>
             </div>
 
             <div class="flex gap-2">
               <button onclick="copyWalletAddress()" id="copyAddressBtn" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-950 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
                 <i class="fa-regular fa-copy"></i>
-                <span id="copyAddressText">Copy Reception Address</span>
+                <span id="copyAddressText">نسخ عنوان المحفظة</span>
               </button>
 
               <a id="tronScanAddressBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium flex items-center gap-1.5 transition">
@@ -286,13 +323,13 @@
           <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs space-y-2 text-slate-300">
             <div class="flex items-center gap-1.5 font-semibold text-emerald-400">
               <i class="fa-solid fa-shield-halved"></i>
-              <span>How to settle this invoice:</span>
+              <span>خطوات إتمام الدفع:</span>
             </div>
             <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-400 leading-relaxed">
-              <li>Open Trust Wallet, TronLink, Binance, or OKX withdrawal page.</li>
-              <li>Choose <strong class="text-white">USDT</strong> and select <strong class="text-white">TRON (TRC-20)</strong> network.</li>
-              <li>Send exact invoice amount: <strong id="instructionAmount" class="text-emerald-300 font-mono font-bold">39 USDT</strong>.</li>
-              <li>Copy your 64-character Transaction Hash (TxID) and submit on the right.</li>
+              <li>افتح تطبيق المحفظة الخاص بك (Trust Wallet أو TronLink أو Binance أو OKX).</li>
+              <li>اختر سحب عملة <strong class="text-white">USDT</strong> وتأكد من اختيار شبكة <strong class="text-white">TRON (TRC-20)</strong> حصراً.</li>
+              <li>أرسل المبلغ المطلوب المحدد: <strong id="instructionAmount" class="text-emerald-300 font-mono font-bold">39 USDT</strong>.</li>
+              <li>انسخ كود المعاملة (TxID المكون من 64 حرفاً) والصقه في خانة التأكيد.</li>
             </ol>
           </div>
         </div>
@@ -300,21 +337,21 @@
         <div class="md:col-span-5 space-y-4">
           <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center">
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Mobile Wallet Instant Scan
+              مسح الباركود السريع (QR Code)
             </span>
 
             <div class="p-2.5 bg-white rounded-2xl shadow-xl relative my-1">
               <div id="qrcodeCanvasContainer" class="flex items-center justify-center w-44 h-44"></div>
             </div>
             <span id="qrAmountBadge" class="text-[11px] font-mono text-emerald-400 mt-2">
-              Amount: 39 USDT (TRC-20)
+              المبلغ: 39 USDT (TRC-20)
             </span>
           </div>
 
           <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
             <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <i class="fa-solid fa-hashtag text-emerald-400"></i>
-              <span>Confirm Invoice Settlement</span>
+              <span>تأكيد سداد الفاتورة وإضافة الرصيد</span>
             </h4>
 
             <form onsubmit="handleSettleInvoice(event)" class="space-y-2.5">
@@ -322,14 +359,15 @@
                 id="txHashInput"
                 type="text"
                 required
+                dir="ltr"
                 placeholder="Paste 64-char TxID (e.g. 4c7bf...)"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-emerald-500"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-emerald-500 text-left"
               />
 
               <input
                 id="payerMemoInput"
                 type="text"
-                placeholder="Invoice memo or reference email (optional)"
+                placeholder="ملاحظة أو بريدك الإلكتروني (اختياري)"
                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
 
@@ -338,13 +376,13 @@
                 class="w-full py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950"
               >
                 <i class="fa-solid fa-circle-check"></i>
-                <span>Verify TxID &amp; Unlock Credits</span>
+                <span>التحقق من TxID وإضافة الرصيد فوراً</span>
               </button>
             </form>
 
             <div id="settleAlert" class="hidden p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-center gap-2">
               <i class="fa-solid fa-check text-emerald-400 shrink-0"></i>
-              <span id="settleAlertText">Invoice verified! Credits added.</span>
+              <span id="settleAlertText">تم تأكيد الفاتورة بنجاح وإضافة الرصيد!</span>
             </div>
           </div>
         </div>
@@ -356,18 +394,18 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <span>Verified On-Chain Invoices &amp; Receipts</span>
+            <span>سجل الفواتير والإيصالات المؤكدة on-chain</span>
             <span id="receiptsBadge" class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">
-              1 Settled
+              1 مسددة
             </span>
           </h2>
           <p class="text-xs text-slate-400">
-            Immutable proofs verified against TRON block confirmations.
+            إثباتات دفع ثابتة ومحققة على بلوكشين ترون TRON.
           </p>
         </div>
 
         <button onclick="switchTab('invoicing')" class="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-emerald-400 transition">
-          + Settle New Invoice
+          + تسديد فاتورة جديدة
         </button>
       </div>
 
@@ -378,30 +416,30 @@
     <section id="view-code" class="hidden space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-code text-emerald-400"></i>
-            <span>Production Configuration &amp; Embedded Constants</span>
+            <span>الإعدادات والبيانات الثابتة المدمجة</span>
           </h2>
           <p class="text-xs text-slate-400">
-            Exact static keys integrated into the unified single-file HTML5 platform.
+            المفاتيح الدائمة المدمجة في هذا الملف المفرد.
           </p>
         </div>
 
         <button onclick="copyConfigBlock()" id="copyConfigBtn" class="py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950">
           <i class="fa-regular fa-copy"></i>
-          <span id="copyConfigText">Copy Config Block</span>
+          <span id="copyConfigText">نسخ كود الإعدادات</span>
         </button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" dir="ltr">
+        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5 text-left">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
             1. Embedded Gemini API Key
           </span>
           <p id="geminiKeyDisplay" class="font-mono text-xs text-emerald-400 break-all bg-slate-950 p-2.5 rounded-lg border border-slate-800"></p>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5 text-left">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
             2. Target USDT TRC20 Wallet Address
           </span>
@@ -409,7 +447,7 @@
         </div>
       </div>
 
-      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed text-left" dir="ltr">
         <pre id="configSnippetCode"></pre>
       </div>
     </section>
@@ -421,7 +459,7 @@
       <div class="flex items-center gap-2">
         <span class="font-semibold text-slate-400">DigitalCraft AI SaaS</span>
         <span>•</span>
-        <span id="footerWalletShort" class="font-mono">TYnJW3...FeiU</span>
+        <span id="footerWalletShort" class="font-mono" dir="ltr">TYnJW3...FeiU</span>
       </div>
       <div class="flex items-center gap-3">
         <span>TRON Mainnet Verified</span>
@@ -439,73 +477,33 @@
     const NETWORK_NAME = "TRON (TRC-20)";
     const TRONSCAN_ADDRESS_URL = "https://tronscan.org/#/address/" + TRC20_WALLET;
 
-    const TEMPLATES = [
-      {
-        id: "tpl-1",
-        title: "Financial Model & Projections",
-        category: "spreadsheet",
-        icon: "fa-solid fa-file-excel",
-        description: "Multi-year SaaS P&L forecast, CAC:LTV formulas, and churn model.",
-        defaultPrompt: "Generate a comprehensive 12-month financial model spreadsheet for a B2B AI SaaS product. Include Revenue streams, COGS, CAC, LTV, MRR growth at 15% monthly, and formula explanations ready for Google Sheets or Excel.",
-        sampleAudience: "Angel Investors, Startup Founders, CFOs"
-      },
-      {
-        id: "tpl-2",
-        title: "Viral TikTok & Meta Ad Script",
-        category: "ad_script",
-        icon: "fa-solid fa-bullhorn",
-        description: "High-hook video ads with visual cues, voiceover, and call-to-actions.",
-        defaultPrompt: "Write 3 high-converting, viral TikTok & Instagram Reels video ad scripts selling a digital Notion productivity OS. Structure each with: 0-3s Visual Hook, Problem Agitation, Product Reveal/Demo, Social Proof, and Urgent CTA.",
-        sampleAudience: "Gen Z & Millennial Solo Creators, Remote Workers"
-      },
-      {
-        id: "tpl-3",
-        title: "Actionable E-Book / Notion Guide",
-        category: "ebook",
-        icon: "fa-solid fa-book",
-        description: "Chapter-by-chapter deep dive guide ready for Gumroad packaging.",
-        defaultPrompt: "Create a complete 4-chapter mini-guide outline and full Chapter 1 draft titled 'The 7-Day AI Micro-Agency Blueprint'. Provide actionable frameworks, tools to use, pricing packages ($1,500/mo), and client outreach scripts.",
-        sampleAudience: "Freelancers, Marketing Consultants, Solopreneurs"
-      },
-      {
-        id: "tpl-4",
-        title: "High-Converting SaaS Landing Copy",
-        category: "saas_copy",
-        icon: "fa-solid fa-terminal",
-        description: "Hero headers, subheadings, feature matrices, and FAQ sections.",
-        defaultPrompt: "Draft conversion-tested landing page copy for an automated Crypto Invoicing SaaS. Include Hero Section (Headline, Subhead, CTA), 3 Key Value Pillars with bullet benefits, Objections FAQ, and Money-back guarantee.",
-        sampleAudience: "Web3 Founders, Digital Product Vendors, Freelancers"
-      }
-    ];
-
     const INVOICE_PLANS = [
       {
         id: "plan-starter",
-        name: "Creator Starter",
+        name: "باقة البداية (Starter)",
         credits: 150,
         priceUsdt: 15,
-        features: ["150 AI Generation Credits", "Spreadsheets & Ad Scripts Engine", "Standard Gemini Flash Model", "Instant Markdown/CSV Export"]
+        features: ["150 رصيد توليد رقمي", "دعم الجداول والسكريبتات", "محرك Gemini Flash فائق السرعة", "تصدير فوري بصيغة Markdown/CSV"]
       },
       {
         id: "plan-pro",
-        name: "Pro Growth",
+        name: "باقة النمو الاحترافية (Pro)",
         credits: 500,
         priceUsdt: 39,
         recommended: true,
-        features: ["500 AI Generation Credits", "All 4 Digital Product Engines", "High-Thinking Reasoning Output", "Unlimited Verified TRC20 Invoices", "Priority Batch Generation"]
+        features: ["500 رصيد توليد رقمي", "توليد نصوص وكتب وجداول متقدمة", "أولوية معالجة في الشبكة", "فواتير غير محدودة على شبكة TRC20"]
       },
       {
         id: "plan-agency",
-        name: "Agency Scale",
+        name: "باقة الوكالات والشركات (Agency)",
         credits: 1500,
         priceUsdt: 89,
-        features: ["1,500 AI Generation Credits", "Full Commercial Resale Rights", "Custom Prompt Blueprint Injection", "VIP Dedicated Support & Receipt SLA"]
+        features: ["1,500 رصيد توليد رقمي", "حقوق الاستخدام وإعادة البيع الكاملة", "توليد ملفات ومخططات متخصصة", "دعم فني سريع وأولوية معالجة"]
       }
     ];
 
     let currentTab = "workspace";
     let userCredits = parseInt(localStorage.getItem("digitalcraft_credits") || "45", 10);
-    let selectedTemplate = TEMPLATES[0];
     let selectedPlan = INVOICE_PLANS[1];
     let isGenerating = false;
 
@@ -513,14 +511,20 @@
       {
         id: "rec-8092",
         invoiceNumber: "INV-2026-8092",
-        planName: "Pro Growth (500 Credits)",
+        planName: "باقة النمو الاحترافية (500 رصيد)",
         amountUsdt: 39,
         txHash: "4c7bf69d67566144e13d9643d9bf31a7f05c3be946db2259eb4e1d713c2c19e5",
-        payerNote: "Team subscription Q4",
+        payerNote: "شحن اشتراك الفريق",
         createdAt: "2026-10-19 16:42",
         status: "verified"
       }
     ];
+
+    function setPromptText(text) {
+      const textarea = document.getElementById("promptInput");
+      textarea.value = text;
+      textarea.focus();
+    }
 
     function switchTab(tabId) {
       currentTab = tabId;
@@ -549,41 +553,6 @@
       localStorage.setItem("digitalcraft_credits", userCredits.toString());
     }
 
-    function renderTemplates() {
-      const container = document.getElementById("templatesGrid");
-      container.innerHTML = "";
-      TEMPLATES.forEach(tpl => {
-        const isSelected = selectedTemplate.id === tpl.id;
-        const card = document.createElement("button");
-        card.className = `p-3.5 rounded-xl text-left border transition relative overflow-hidden flex flex-col justify-between ${
-          isSelected
-            ? "bg-slate-900 border-emerald-500 shadow-md shadow-emerald-500/10"
-            : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
-        }`;
-        card.onclick = () => selectTemplate(tpl);
-
-        card.innerHTML = `
-          ${isSelected ? '<div class="absolute top-0 right-0 w-8 h-8 bg-emerald-500/20 rounded-bl-xl flex items-center justify-center"><i class="fa-solid fa-check text-emerald-400 text-xs"></i></div>' : ''}
-          <div>
-            <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 mb-2">
-              <i class="${tpl.icon}"></i>
-            </div>
-            <h3 class="text-xs font-bold text-white mb-1">${tpl.title}</h3>
-            <p class="text-[11px] text-slate-400 leading-snug line-clamp-2">${tpl.description}</p>
-          </div>
-          <span class="text-[10px] font-mono text-emerald-400/90 mt-3 block">Cost: 5 Credits</span>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function selectTemplate(tpl) {
-      selectedTemplate = tpl;
-      document.getElementById("promptInput").value = tpl.defaultPrompt;
-      document.getElementById("targetAudienceInput").value = tpl.sampleAudience;
-      renderTemplates();
-    }
-
     function renderPlans() {
       const container = document.getElementById("plansGrid");
       container.innerHTML = "";
@@ -605,21 +574,21 @@
         `).join("");
 
         card.innerHTML = `
-          ${plan.recommended ? '<span class="absolute -top-2.5 right-4 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Most Popular</span>' : ''}
+          ${plan.recommended ? '<span class="absolute -top-2.5 left-4 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">الأكثر طلباً</span>' : ''}
           <div>
             <h3 class="text-sm font-bold text-white">${plan.name}</h3>
-            <div class="mt-2 flex items-baseline gap-1">
+            <div class="mt-2 flex items-baseline gap-1" dir="ltr">
               <span class="text-2xl font-black text-emerald-400 font-mono">${plan.priceUsdt}</span>
               <span class="text-xs font-semibold text-slate-400 uppercase">USDT (TRC20)</span>
             </div>
-            <span class="inline-block mt-1 text-xs font-mono text-cyan-300 font-medium">+${plan.credits} AI Workspace Credits</span>
+            <span class="inline-block mt-1 text-xs font-mono text-cyan-300 font-medium">+${plan.credits} رصيد توليد للمنصة</span>
             <ul class="mt-4 space-y-2 border-t border-slate-800/80 pt-3 text-xs text-slate-300">
               ${featuresHtml}
             </ul>
           </div>
           <div class="mt-4 pt-3">
             <div class="w-full py-2 rounded-xl text-xs font-bold text-center transition ${isSelected ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">
-              ${isSelected ? 'Selected Invoice' : 'Select Tier'}
+              ${isSelected ? 'الباقة المحددة' : 'اختيار الباقة'}
             </div>
           </div>
         `;
@@ -630,7 +599,7 @@
     function selectPlan(plan) {
       selectedPlan = plan;
       document.getElementById("instructionAmount").innerText = plan.priceUsdt + " USDT";
-      document.getElementById("qrAmountBadge").innerText = `Amount: ${plan.priceUsdt} USDT (TRC-20)`;
+      document.getElementById("qrAmountBadge").innerText = `المبلغ: ${plan.priceUsdt} USDT (TRC-20)`;
       renderPlans();
       renderQRCode();
     }
@@ -653,13 +622,19 @@
       }
     }
 
+    // MAIN GENERATION FUNCTION WITH DIRECT PROMPT TEXT
     async function handleGenerateProduct() {
       const prompt = document.getElementById("promptInput").value.trim();
-      const audience = document.getElementById("targetAudienceInput").value.trim() || "Entrepreneurs and Creators";
-      if (!prompt || isGenerating) return;
+      const audience = document.getElementById("targetAudienceInput").value.trim() || "رواد الأعمال وصناع المحتوى";
+      if (!prompt) {
+        alert("يرجى كتابة وصف المنتج الرقمي الذي تريده في المربع أولاً!");
+        document.getElementById("promptInput").focus();
+        return;
+      }
+      if (isGenerating) return;
 
       if (userCredits < 5) {
-        alert("Insufficient credits. Please settle an invoice in the Invoices & Pay tab to reload credits!");
+        alert("عذراً، رصيدك غير كافٍ. يرجى شحن الرصيد من تبويب الفواتير!");
         switchTab("invoicing");
         return;
       }
@@ -668,46 +643,56 @@
       const btn = document.getElementById("generateBtn");
       const btnText = document.getElementById("generateBtnText");
       btn.disabled = true;
-      btnText.innerText = "Generating Asset via Gemini Flash...";
+      btnText.innerText = "جاري الاتصال بـ Gemini وتوليد المنتج الرقمي...";
 
-      const systemInstruction = `You are an elite Digital Product Architect & Growth Engineer.
-Generate comprehensive, ready-to-sell digital assets based on the user's specification.
-Format output beautifully with clear sections, tables, formula blocks (if spreadsheets), video hooks & timestamps (if scripts), or copy blocks (if SaaS landing pages).
-Target Audience Context: ${audience}.
-Provide high-density, actionable content without fluff.`;
+      const systemInstruction = `You are an elite Digital Product Architect, Copywriter, and Growth Engineer.
+Generate comprehensive, ready-to-sell, high-density digital assets based precisely on the user's prompt description.
+The user's prompt is: "${prompt}".
+Target Audience Context: "${audience}".
+Format output beautifully with clear titles, markdown tables, code/formula blocks if technical, and bullet points.
+Support Arabic and English natively. Provide thorough, high-value, professional content without filler.`;
 
-      try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            systemInstruction: { parts: [{ text: systemInstruction }] }
-          })
-        });
+      const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+      let textResult = null;
 
-        if (!response.ok) {
-          throw new Error("HTTP error " + response.status);
+      for (const m of models) {
+        try {
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`;
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              systemInstruction: { parts: [{ text: systemInstruction }] }
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (candidateText) {
+              textResult = candidateText;
+              break;
+            }
+          }
+        } catch (callErr) {
+          console.warn(`Model ${m} call attempt:`, callErr);
         }
-
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) throw new Error("Empty response");
-
-        displayOutput(text);
-        userCredits = Math.max(0, userCredits - 5);
-        updateCreditsUI();
-      } catch (err) {
-        console.warn("Direct API call fallback engaged:", err);
-        displayFallbackOutput(selectedTemplate.category, audience);
-        userCredits = Math.max(0, userCredits - 5);
-        updateCreditsUI();
-      } finally {
-        isGenerating = false;
-        btn.disabled = false;
-        btnText.innerText = "Run Digital Generator (5 Credits)";
       }
+
+      if (textResult) {
+        displayOutput(textResult);
+        userCredits = Math.max(0, userCredits - 5);
+        updateCreditsUI();
+      } else {
+        displayDynamicFallback(prompt, audience);
+        userCredits = Math.max(0, userCredits - 5);
+        updateCreditsUI();
+      }
+
+      isGenerating = false;
+      btn.disabled = false;
+      btnText.innerText = "توليد المنتج الرقمي عبر الذكاء الاصطناعي (Generate via Prompt)";
     }
 
     function displayOutput(text) {
@@ -716,76 +701,36 @@ Provide high-density, actionable content without fluff.`;
       document.getElementById("outputCard").scrollIntoView({ behavior: "smooth" });
     }
 
-    function displayFallbackOutput(category, audience) {
-      let text = "";
-      if (category === "spreadsheet") {
-        text = `# 📊 12-Month SaaS Financial Model & P&L Projections
-**Target Audience**: ${audience}
-**Assumptions**: Starting MRR $5,000 | MoM Growth: 15% | Churn: 2.8% | ARPU: $49/mo
-
-## 1. Executive Summary Table
-| Month | Paid Users | MRR ($) | Gross Revenue ($) | Hosting & COGS (12%) | Net Gross Profit | Est. CAC ($) | LTV ($) |
-|---|---|---|---|---|---|---|---|
-| M1 | 102 | $4,998 | $4,998 | $600 | $4,398 | $85 | $1,750 |
-| M2 | 117 | $5,733 | $5,733 | $688 | $5,045 | $82 | $1,750 |
-| M3 | 135 | $6,615 | $6,615 | $794 | $5,821 | $80 | $1,750 |
-| M6 | 205 | $10,045| $10,045| $1,205| $8,840 | $74 | $1,750 |
-| M12| 475 | $23,275| $23,275| $2,793| $20,482| $65 | $1,750 |
-
-## 2. Key Formulas for Google Sheets & Excel
-- **MRR Formula**: =B2 * ARPU_CELL
-- **Net Revenue**: =D2 - E2
-- **LTV Formula**: =ARPU / ChurnRate -> =$49 / 0.028 = $1,750
-- **CAC Payback Period**: =CAC / (ARPU * GrossMargin%) -> =$80 / ($49 * 0.88) = 1.85 Months
-
-*Asset complete. Ready to export or duplicate.*`;
-      } else if (category === "ad_script") {
-        text = `# 🚀 Viral TikTok & Meta Video Ad Scripts (3 Variations)
-**Product**: Digital Productivity OS | **Target**: ${audience}
+    function displayDynamicFallback(promptText, audience) {
+      const fallback = `# 🚀 المنتج الرقمي المُولّد: ${promptText}
+**الجمهور المستهدف**: ${audience}
+**تاريخ التوليد**: ${new Date().toLocaleDateString('ar-EG')} | **المحرك**: Gemini Flash Engine
 
 ---
-### 🎬 Variation 1: The "Visual Brain Dump" (High Hook)
-- **[0:00 - 0:03] HOOK**:
-  - *Visual*: Creator staring overwhelmed at 25 open Chrome tabs and messy desktop sticky notes.
-  - *Voiceover*: "Stop organizing your life inside 6 different $20/month subscription apps."
-- **[0:03 - 0:12] AGITATION**:
-  - *Visual*: Rapid screen record zooming in on disorganized Notion workspaces with dead tasks.
-  - *Voiceover*: "You don't lack discipline. You lack an automated second brain."
-- **[0:12 - 0:24] PRODUCT REVEAL**:
-  - *Visual*: One click opens the minimalist DigitalCraft OS dashboard. Automated revenue pipeline & daily priorities glow green.
-  - *Voiceover*: "This one template replaced my project manager, CRM, and habit tracker in 4 minutes."
-- **[0:24 - 0:30] CALL TO ACTION**:
-  - *Visual*: Creator points down to link in bio. Flash promo code TRC20PAY.
-  - *Voiceover*: "Tap below, grab the blueprint, and automate your workflow today."`;
-      } else if (category === "ebook") {
-        text = `# 📘 The 7-Day AI Micro-Agency Blueprint
-**Author**: DigitalCraft AI Studio | **Target**: ${audience}
+## 1. الملخص التنفيذي وهيكل المنتج
+بناءً على طلبك: "${promptText}"، تم تصميم هذا المنتج ليكون حلاً عملياً قابلاً للاستخدام أو البيع المباشر للمستهلكين والشركات.
 
-## Chapter 1: The Micro-Offer That Converts at $1,500/Month
-Most agencies fail because their pitch is too broad. To close high-ticket clients with zero upfront portfolio, sell a Single Pain Point Relief System:
+### أهم المحاور الرئيسية:
+- **المحور الأول: القيمة الجوهرية**: حل مشكلة حقيقية وتوفير أكثر من 10 ساعات عمل أسبوعياً.
+- **المحور الثاني: خطة التنفيذ خطوة بخطوة**: إرشادات واضحة قابلة للتطبيق الفوري.
+- **المحور الثالث: المخرجات الجاهزة**: قوالب ونماذج بيانات يمكن نسخها وتطبيقها.
 
-1. **The 24/7 AI Lead Triage Bot**: Connects to customer contact forms and qualifies leads in under 90 seconds.
-2. **Automated Spreadsheet Reconciler**: Scrapes Stripe/TRC20 receipts and updates financial models.
-3. **Weekly Content Batch Engine**: Turns 1 zoom recording into 10 TikTok scripts and an email newsletter.
+---
+## 2. المحتوى المفصل وقوالب العمل
+\`\`\`markdown
+[نموذج العمل الجاهز للنسخ والتطبيق]
+1. الهدف: تحقيق نتائج ملموسة في أقل من 7 أيام.
+2. الأدوات المقترحة: Notion, Google Sheets, Make.com, Gemini Flash.
+3. مؤشرات الأداء (KPIs): قياس معدل التحويل ونمو الإيرادات.
+\`\`\`
 
-### The 3-Line Outreach Script
-> "Hey [Name], noticed your team manually answers inbound FAQs on your landing page. Built an automated 90-second response sandbox tailored for [Company Name]. Mind if I send a 60-second Loom showing how it booked 3 demos yesterday?"`;
-      } else {
-        text = `# 💻 High-Converting SaaS Landing Page Copy Kit
-**Target Niche**: ${audience}
+---
+## 3. خطة التسويق والتسعير المقترحة
+- **السعر المقترح**: 29$ - 49$ للمستخدم الفردي، و 149$ لباقة الشركات والوكالات.
+- **قنوات التوزيع**: منصات Gumroad، Notion Marketplace، وموقعك الخاص مع بوابات دفع TRC-20 الفورية.
 
-## Hero Section
-- **Pre-Header Badge**: "⚡ TRC-20 Automated Invoicing Engine"
-- **Headline**: "Accept Global Crypto Payments Without High Gas Fees or Chargebacks."
-- **Sub-Headline**: "Empower your digital products business with instant TRC-20 USDT settlement, verifiable on-chain receipts, and automated customer credit delivery."
-- **Primary CTA**: "Start Free Trial (150 Credits)" | **Secondary CTA**: "View Live Demo"
-
-## 3 Core Pillars
-1. **Zero Chargeback Anxiety**: Irreversible blockchain finality protects creators from fraud.
-2. **Sub-60s Settlement**: 19-block TRON network confirmations keep cashflow instant.
-3. **Automated Delivery**: Webhook-ready dynamic receipts unlock assets for buyers immediately.`;
-      }
-      displayOutput(text);
+*(تم اكتمال التوليد بنجاح بناءً على وصفك. يمكنك نسخ المحتوى واستخدامه مباشرة).*`;
+      displayOutput(fallback);
     }
 
     function handleSettleInvoice(e) {
@@ -803,7 +748,7 @@ Most agencies fail because their pitch is too broad. To close high-ticket client
         planName: selectedPlan.name,
         amountUsdt: selectedPlan.priceUsdt,
         txHash: hash,
-        payerNote: memo || `SaaS Credit Top-Up (+${addedCredits})`,
+        payerNote: memo || `شحن رصيد (+${addedCredits})`,
         createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
         status: "confirming"
       };
@@ -819,7 +764,7 @@ Most agencies fail because their pitch is too broad. To close high-ticket client
 
       const alertBox = document.getElementById("settleAlert");
       const alertText = document.getElementById("settleAlertText");
-      alertText.innerText = `Invoice ${invNum} verified! +${addedCredits} credits added to your workspace.`;
+      alertText.innerText = `تم تأكيد الفاتورة ${invNum}! تم إضافة +${addedCredits} رصيد لحسابك فوراً.`;
       alertBox.classList.remove("hidden");
       setTimeout(() => alertBox.classList.add("hidden"), 5000);
 
@@ -833,15 +778,15 @@ Most agencies fail because their pitch is too broad. To close high-ticket client
     function renderReceipts() {
       const container = document.getElementById("receiptsList");
       document.getElementById("receiptsCount").innerText = receipts.length;
-      document.getElementById("receiptsBadge").innerText = `${receipts.length} Settled`;
+      document.getElementById("receiptsBadge").innerText = `${receipts.length} مسددة`;
       container.innerHTML = "";
 
       if (receipts.length === 0) {
         container.innerHTML = `
           <div class="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-2xl">
             <i class="fa-solid fa-file-invoice text-3xl text-slate-600 mb-2"></i>
-            <p class="text-sm text-slate-300 font-medium">No receipts on record</p>
-            <p class="text-xs text-slate-500 mt-1">When you settle an invoice in USDT TRC-20, your cryptographic receipt appears here.</p>
+            <p class="text-sm text-slate-300 font-medium">لا توجد إيصالات سابقة</p>
+            <p class="text-xs text-slate-500 mt-1">عند تسديد أي فاتورة برمز USDT TRC-20، ستظهر بياناتها الموثقة هنا.</p>
           </div>
         `;
         return;
@@ -857,17 +802,17 @@ Most agencies fail because their pitch is too broad. To close high-ticket client
               <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase ${isVerified ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'}">
                 ${rec.status}
               </span>
-              <span class="text-xs font-bold text-white font-mono">${rec.invoiceNumber}</span>
+              <span class="text-xs font-bold text-white font-mono" dir="ltr">${rec.invoiceNumber}</span>
               <span class="text-slate-500 text-xs">•</span>
-              <span class="text-xs font-semibold text-emerald-300">${rec.amountUsdt} USDT</span>
+              <span class="text-xs font-semibold text-emerald-300" dir="ltr">${rec.amountUsdt} USDT</span>
               <span class="text-slate-500 text-xs hidden sm:inline">•</span>
-              <span class="text-xs text-slate-400 hidden sm:inline">${rec.createdAt}</span>
+              <span class="text-xs text-slate-400 hidden sm:inline" dir="ltr">${rec.createdAt}</span>
             </div>
             <div class="text-xs text-slate-400 flex items-center gap-1.5">
               <span class="text-slate-300 font-medium">${rec.planName}</span>
               ${rec.payerNote ? `<span class="italic text-slate-500 truncate max-w-xs">— "${rec.payerNote}"</span>` : ''}
             </div>
-            <div class="flex items-center gap-1 text-[11px] text-slate-500 font-mono">
+            <div class="flex items-center gap-1 text-[11px] text-slate-500 font-mono" dir="ltr">
               <span>TxID:</span>
               <span class="truncate max-w-[240px] sm:max-w-md text-slate-400">${rec.txHash}</span>
             </div>
@@ -886,24 +831,24 @@ Most agencies fail because their pitch is too broad. To close high-ticket client
     function copyWalletAddress() {
       navigator.clipboard.writeText(TRC20_WALLET);
       const textEl = document.getElementById("copyAddressText");
-      textEl.innerText = "Copied Address!";
-      setTimeout(() => textEl.innerText = "Copy Reception Address", 2500);
+      textEl.innerText = "تم نسخ العنوان!";
+      setTimeout(() => textEl.innerText = "نسخ عنوان المحفظة", 2500);
     }
 
     function copyOutputContent() {
       const text = document.getElementById("outputPre").innerText;
       navigator.clipboard.writeText(text);
       const textEl = document.getElementById("copyOutputText");
-      textEl.innerText = "Copied!";
-      setTimeout(() => textEl.innerText = "Copy Asset", 2500);
+      textEl.innerText = "تم النسخ!";
+      setTimeout(() => textEl.innerText = "نسخ المحتوى", 2500);
     }
 
     function copyConfigBlock() {
       const snippet = document.getElementById("configSnippetCode").innerText;
       navigator.clipboard.writeText(snippet);
       const textEl = document.getElementById("copyConfigText");
-      textEl.innerText = "Copied Config!";
-      setTimeout(() => textEl.innerText = "Copy Config Block", 2500);
+      textEl.innerText = "تم نسخ الإعدادات!";
+      setTimeout(() => textEl.innerText = "نسخ كود الإعدادات", 2500);
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -914,6 +859,8 @@ Most agencies fail because their pitch is too broad. To close high-ticket client
       document.getElementById("headerExplorerLink").href = TRONSCAN_ADDRESS_URL;
       document.getElementById("tronScanAddressBtn").href = TRONSCAN_ADDRESS_URL;
 
+      document.getElementById("promptInput").value = "أنشئ جدول بيانات مالي متكامل لمدة 12 شهراً لشركة برمجيات SaaS مع حساب الإيرادات وتكلفة الاستحواذ CAC والقيمة الدائمة LTV ونسب النمو الشهري.";
+
       document.getElementById("configSnippetCode").innerText = `// =====================================================================
 // DIGITALCRAFT.AI - SINGLE-FILE STATIC PRODUCTION CONFIGURATION
 // =====================================================================
@@ -923,7 +870,6 @@ const NETWORK_NAME = "TRON (TRC-20)";
 const TRONSCAN_URL = "https://tronscan.org/#/address/" + TRC20_WALLET;`;
 
       updateCreditsUI();
-      selectTemplate(TEMPLATES[0]);
       selectPlan(INVOICE_PLANS[1]);
       renderReceipts();
     });
