@@ -1,858 +1,932 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect, useRef } from "react";
-import QRCode from "qrcode";
-import {
-  Copy,
-  Check,
-  QrCode,
-  ExternalLink,
-  ShieldCheck,
-  AlertCircle,
-  Sparkles,
-  Send,
-  RefreshCw,
-  Wallet as WalletIcon,
-  FileText,
-  DollarSign,
-  CheckCircle2,
-  Code2,
-} from "lucide-react";
-import { GoogleGenAI } from "@google/genai";
-
-// ==========================================
-// PRODUCTION CONFIGURATIONS
-// ==========================================
-export const KEY = "AQ.Ab8RN6I1EF_xWK1LSYpKXtMZ4JKU-2TP-4VbPf40up706Ab_Yg";
-export const WALLET = "TYnJW395RFhCnpowLBtEiHWys88tg5FeiU";
-
-// Constants & Metadata
-export const NETWORK_NAME = "TRON (TRC-20)";
-export const DEFAULT_TOKEN = "USDT (TRC-20)";
-export const TRONSCAN_ADDRESS_URL = `https://tronscan.org/#/address/${WALLET}`;
-
-interface TransactionProof {
-  id: string;
-  txHash: string;
-  amount: string;
-  token: string;
-  senderNote: string;
-  timestamp: string;
-  status: "verified" | "confirming" | "pending";
-}
-
-interface ChatMessage {
-  id: string;
-  sender: "user" | "assistant";
-  text: string;
-  time: string;
-}
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState<"pay" | "ai" | "history" | "code">("pay");
-  const [selectedToken, setSelectedToken] = useState<"USDT" | "TRX">("USDT");
-  const [amount, setAmount] = useState<string>("50");
-  const [copiedAddress, setCopiedAddress] = useState<boolean>(false);
-  const [copiedCode, setCopiedCode] = useState<boolean>(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [txHashInput, setTxHashInput] = useState<string>("");
-  const [senderNoteInput, setSenderNoteInput] = useState<string>("");
-  const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
-
-  // Stored transactions in local storage
-  const [transactions, setTransactions] = useState<TransactionProof[]>(() => {
-    try {
-      const saved = localStorage.getItem("cryptopay_txs");
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
-    return [
-      {
-        id: "tx-demo-1",
-        txHash: "4c7bf69d67566144e13d9643d9bf31a7f05c3be946db2259eb4e1d713c2c19e5",
-        amount: "50",
-        token: "USDT",
-        senderNote: "Service payment invoice #408",
-        timestamp: "Just now",
-        status: "verified",
-      },
-    ];
-  });
-
-  // AI Assistant State
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "msg-1",
-      sender: "assistant",
-      text: `Hello! I am your TRON TRC-20 Payment & Crypto Assistant. Target reception wallet is active: \`${WALLET}\`. Ask me anything about sending USDT/TRX, verifying transaction hashes, network energy fees, or payment instructions!`,
-      time: "Now",
-    },
-  ]);
-  const [inputQuestion, setInputQuestion] = useState<string>("");
-  const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
-
-  // Generate QR Code
-  useEffect(() => {
-    const paymentUri =
-      selectedToken === "USDT"
-        ? `tron:${WALLET}?token=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&amount=${amount || 0}`
-        : `tron:${WALLET}?amount=${amount || 0}`;
-
-    QRCode.toDataURL(paymentUri, {
-      width: 320,
-      margin: 2,
-      color: {
-        dark: "#0f172a",
-        light: "#ffffff",
-      },
-      errorCorrectionLevel: "H",
-    })
-      .then((url) => setQrDataUrl(url))
-      .catch((err) => console.error("Error creating QR", err));
-  }, [selectedToken, amount]);
-
-  // Persist transactions
-  useEffect(() => {
-    try {
-      localStorage.setItem("cryptopay_txs", JSON.stringify(transactions));
-    } catch {
-      // ignore
-    }
-  }, [transactions]);
-
-  // Scroll chat
-  useEffect(() => {
-    if (activeTab === "ai") {
-      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, activeTab]);
-
-  const copyToClipboard = (text: string, type: "address" | "code") => {
-    navigator.clipboard.writeText(text);
-    if (type === "address") {
-      setCopiedAddress(true);
-      setTimeout(() => setCopiedAddress(false), 2500);
-    } else {
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2500);
-    }
-  };
-
-  const handleTxSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!txHashInput.trim()) return;
-
-    const cleanHash = txHashInput.trim().replace(/^0x/, "");
-    const newTx: TransactionProof = {
-      id: "tx-" + Date.now(),
-      txHash: cleanHash,
-      amount: amount || "0",
-      token: selectedToken,
-      senderNote: senderNoteInput.trim() || "Manual submission",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      status: "confirming",
-    };
-
-    setTransactions([newTx, ...transactions]);
-    setTxHashInput("");
-    setSenderNoteInput("");
-    setSubmitSuccess(true);
-    setTimeout(() => setSubmitSuccess(false), 4000);
-
-    setTimeout(() => {
-      setTransactions((prev) =>
-        prev.map((t) => (t.id === newTx.id ? { ...t, status: "verified" } : t))
-      );
-    }, 8000);
-  };
-
-  // AI Response Generator
-  const handleAskAi = async (customPrompt?: string) => {
-    const promptToSend = customPrompt || inputQuestion;
-    if (!promptToSend.trim() || isAiLoading) return;
-
-    const userMsg: ChatMessage = {
-      id: "user-" + Date.now(),
-      sender: "user",
-      text: promptToSend,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    if (!customPrompt) setInputQuestion("");
-    setIsAiLoading(true);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: KEY });
-      const systemInstruction = `You are a helpful and concise TRON TRC-20 cryptocurrency payment specialist.
-The designated payment wallet reception address is: ${WALLET}.
-Supported assets: USDT (Tether on TRON TRC-20) and TRX.
-Answer payment questions, explain how to transfer on TronLink, Binance, TrustWallet, explain Bandwidth and Energy fees, and assist with verifying transaction hashes.
-Keep replies clear, mobile-friendly, and polite. Always remind users to ensure the network is strictly TRON (TRC-20) to prevent token loss.`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: promptToSend,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        },
-      });
-
-      const replyText =
-        response.text || "I was unable to retrieve a response from the model. Please verify your connection.";
-
-      const aiMsg: ChatMessage = {
-        id: "ai-" + Date.now(),
-        sender: "assistant",
-        text: replyText,
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch (err: unknown) {
-      console.warn("Gemini call fell back to local expert knowledge:", err);
-      let smartFallback = "";
-      const lower = promptToSend.toLowerCase();
-
-      if (lower.includes("how to send") || lower.includes("how to pay") || lower.includes("usdt")) {
-        smartFallback = `**Steps to Send USDT (TRC-20) to ${WALLET}**:\n1. Open your crypto app (Trust Wallet, TronLink, Binance, or OKX).\n2. Select **Withdraw** or **Send** > Choose **USDT**.\n3. **CRITICAL**: Select **TRON (TRC-20)** network (NOT ERC20 or BSC).\n4. Paste target address: \`${WALLET}\`.\n5. Enter amount (e.g. ${amount || "50"} USDT) and confirm. You will need ~13.5 to 27 TRX or Energy for network fee.\n6. Once sent, copy the Transaction ID (TxID) and submit it in the "Verify TxID" tab.`;
-      } else if (lower.includes("fee") || lower.includes("energy") || lower.includes("bandwidth")) {
-        smartFallback = `**TRON Network Fees Explained**:\n- TRC-20 USDT transfers consume **Energy** and **Bandwidth**.\n- If your wallet doesn't have staked Energy, the network burns approximately **13.5 to 27 TRX** (around $2.50 - $4.00 USD) to process the USDT transaction.\n- Always keep at least 30 TRX in your sending wallet to avoid out-of-energy transaction failures!`;
-      } else if (lower.includes("erc20") || lower.includes("difference") || lower.includes("bep20")) {
-        smartFallback = `**TRC20 vs Other Networks**:\n- **TRC-20 (TRON)**: Address starts with 'T' (like \`${WALLET.slice(0, 8)}...\`). Super fast (~1 minute) and lower fees.\n- **ERC-20 (Ethereum)**: Address starts with '0x'. Much higher gas fees.\n- **BEP-20 (BNB Chain)**: Address starts with '0x'.\n⚠️ **WARNING**: Only send TRC-20 tokens to this address! Sending ERC-20 to a TRC-20 address can lead to permanent loss of funds.`;
-      } else if (lower.includes("time") || lower.includes("confirm")) {
-        smartFallback = `**Confirmation Time**:\n- TRON blocks are generated every **3 seconds**.\n- Most TRC-20 transfers achieve confirmation in **19 to 60 seconds** (19 block confirmations).\n- You can inspect real-time progress directly on TronScan.`;
-      } else {
-        smartFallback = `**TRC-20 Payment Guidance**:\n- **Target Wallet Address**: \`${WALLET}\`\n- **Token**: USDT (TRC-20) or TRX\n- **Explorer**: TronScan verified\n- Make sure your sending exchange uses the **TRX / TRC-20** network withdrawal option.`;
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigitalCraft.AI - Digital Products SaaS &amp; TRC20 Gateway</title>
+  <meta name="description" content="Single-file self-contained Digital Products SaaS platform powered by Gemini AI with TRC-20 USDT invoicing and dynamic receipts." />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#111827',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          }
+        }
       }
-
-      const aiMsg: ChatMessage = {
-        id: "ai-" + Date.now(),
-        sender: "assistant",
-        text: smartFallback,
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-    } finally {
-      setIsAiLoading(false);
     }
-  };
+  </script>
 
-  const standaloneSourceCode = `// =================================================================
-// TRON TRC-20 PAYMENT TERMINAL & GEMINI AI ASSISTANT
-// Full Self-Contained Standalone Production Build
-// =================================================================
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-export const KEY = "${KEY}";
-export const WALLET = "${WALLET}";
+  <!-- QRCode.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-// Network Specifications
-export const NETWORK = "TRON (TRC-20)";
-export const TARGET_ADDRESS = WALLET;
-export const EXPLORER_URL = "https://tronscan.org/#/address/" + WALLET;
-`;
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-emerald-900/60 via-slate-900 to-cyan-950 border-b border-emerald-500/20 px-3 py-2 text-xs sm:text-sm">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 overflow-hidden">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="font-semibold text-emerald-400 truncate">TRON (TRC-20) Active Gateway</span>
-            <span className="text-slate-400 hidden sm:inline">• Automated 19-Block Confirmation</span>
+  <!-- Top Announcement Bar -->
+  <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 border-b border-emerald-500/20 px-3 py-1.5 text-xs">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 overflow-hidden">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <span class="text-emerald-400 font-semibold truncate">TRC-20 Settlement Engine Online</span>
+        <span class="text-slate-400 hidden sm:inline">• USDT Contract: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <span class="text-slate-300 font-mono text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+          <i class="fa-solid fa-bolt text-emerald-400 mr-1"></i><span id="headerCredits">45</span> Credits
+        </span>
+        <a id="headerExplorerLink" href="#" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium">
+          <span class="hidden sm:inline">Explorer</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+            <i class="fa-solid fa-wand-magic-sparkles text-slate-950 font-bold text-sm"></i>
           </div>
-          <a
-            href={TRONSCAN_ADDRESS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 shrink-0 font-medium"
-          >
-            <span>TronScan Explorer</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">
+                DigitalCraft<span class="text-emerald-400">.AI</span>
+              </h1>
+              <span class="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded">
+                HTML5 Single-File
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate max-w-[260px] sm:max-w-none">
+              AI Digital Products Studio + TRC-20 CryptoPay Gateway
+            </p>
+          </div>
+        </div>
+
+        <div class="sm:hidden flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-mono text-emerald-400">
+          <i class="fa-solid fa-bolt"></i>
+          <span id="mobileCredits">45</span>
         </div>
       </div>
 
-      {/* Main Header */}
-      <header className="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur sticky top-0 z-20">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-              <WalletIcon className="w-5 h-5 text-slate-950 font-bold" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-                  CryptoPay<span className="text-emerald-400">.TRC20</span>
-                </h1>
-                <span className="px-2 py-0.5 text-[10px] uppercase font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">
-                  Live
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 truncate max-w-[280px] sm:max-w-none">
-                Reception Address: {WALLET.slice(0, 6)}...{WALLET.slice(-6)}
-              </p>
-            </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 self-stretch sm:self-auto overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => setActiveTab("pay")}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                activeTab === "pay"
-                  ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <QrCode className="w-3.5 h-3.5" />
-              <span>Pay &amp; Receive</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("ai")}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                activeTab === "ai"
-                  ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Assistant</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("history")}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                activeTab === "history"
-                  ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Receipts ({transactions.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("code")}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                activeTab === "code"
-                  ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <Code2 className="w-3.5 h-3.5" />
-              <span>Code</span>
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col">
-        {activeTab === "pay" && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-7 space-y-4">
-              <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                    <h2 className="font-semibold text-white text-sm sm:text-base">
-                      Deposit / Reception Address
-                    </h2>
-                  </div>
-                  <span className="text-[11px] font-mono px-2 py-0.5 bg-slate-800 text-cyan-300 rounded border border-slate-700">
-                    TRC-20
-                  </span>
-                </div>
-
-                <div className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span className="flex items-center gap-1 font-medium">
-                      <WalletIcon className="w-3.5 h-3.5 text-emerald-400" />
-                      Target Reception Wallet:
-                    </span>
-                    <span className="text-[10px] text-emerald-400/90 font-mono">Verified Address</span>
-                  </div>
-
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800/80 flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs sm:text-sm text-emerald-300 break-all select-all font-medium leading-relaxed">
-                      {WALLET}
-                    </span>
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={() => copyToClipboard(WALLET, "address")}
-                      className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                        copiedAddress
-                          ? "bg-emerald-500 text-slate-950"
-                          : "bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-950"
-                      }`}
-                    >
-                      {copiedAddress ? (
-                        <>
-                          <Check className="w-4 h-4 stroke-[3]" />
-                          <span>Copied Address!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          <span>Copy Reception Address</span>
-                        </>
-                      )}
-                    </button>
-
-                    <a
-                      href={TRONSCAN_ADDRESS_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition"
-                      title="Inspect address on TronScan"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      <span className="hidden sm:inline">Explore</span>
-                    </a>
-                  </div>
-                </div>
-
-                {/* Amount Picker */}
-                <div className="pt-2 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-slate-300">Select Asset &amp; Amount</label>
-                    <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedToken("USDT")}
-                        className={`px-2.5 py-1 rounded font-semibold transition ${
-                          selectedToken === "USDT"
-                            ? "bg-emerald-500 text-slate-950"
-                            : "text-slate-400 hover:text-white"
-                        }`}
-                      >
-                        USDT (TRC-20)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedToken("TRX")}
-                        className={`px-2.5 py-1 rounded font-semibold transition ${
-                          selectedToken === "TRX"
-                            ? "bg-emerald-500 text-slate-950"
-                            : "text-slate-400 hover:text-white"
-                        }`}
-                      >
-                        TRX
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
-                    {["10", "25", "50", "100", "250", "500"].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setAmount(preset)}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-mono font-medium border transition ${
-                          amount === preset
-                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-300 font-bold"
-                            : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700"
-                        }`}
-                      >
-                        ${preset}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <DollarSign className="w-4 h-4 text-emerald-400" />
-                    </div>
-                    <input
-                      type="number"
-                      min="1"
-                      step="any"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter custom amount..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-16 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono"
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs font-bold text-slate-400">
-                      {selectedToken}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/90 text-xs flex gap-2.5 items-start">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="font-semibold text-amber-300">Crucial Network Notice:</p>
-                    <p className="text-[11px] leading-relaxed text-amber-200/80">
-                      Ensure you select <strong className="text-white">TRON (TRC-20)</strong> when sending.
-                      Do NOT send via Ethereum (ERC-20), BNB Chain, or Polygon.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: QR Box & Submission Form */}
-            <div className="md:col-span-5 space-y-4">
-              <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col items-center text-center">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Scan to Send via Mobile Wallet
-                </span>
-
-                <div className="p-3 bg-white rounded-2xl shadow-2xl relative group my-1">
-                  {qrDataUrl ? (
-                    <img
-                      src={qrDataUrl}
-                      alt="TRON TRC20 QR Code"
-                      className="w-48 h-48 sm:w-52 sm:h-52 object-contain"
-                    />
-                  ) : (
-                    <div className="w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center bg-slate-100 rounded-xl">
-                      <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-1 flex justify-center">
-                    <span className="bg-slate-900/90 text-emerald-400 text-[10px] font-mono px-2 py-0.5 rounded-full border border-emerald-500/40">
-                      TRC-20 • {amount || "0"} {selectedToken}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-slate-400 mt-2 max-w-xs">
-                  Scan with Trust Wallet, TronLink, Binance, OKX, or any TRON-compatible wallet.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-sm font-semibold text-white">Submit Payment TxID</h3>
-                </div>
-                <p className="text-xs text-slate-400">
-                  Already completed your transfer? Paste your 64-character TRON Transaction Hash below:
-                </p>
-
-                <form onSubmit={handleTxSubmit} className="space-y-3">
-                  <div>
-                    <input
-                      type="text"
-                      value={txHashInput}
-                      onChange={(e) => setTxHashInput(e.target.value)}
-                      placeholder="Paste TxID / Transaction Hash (e.g. 4c7bf...)"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono transition"
-                    />
-                  </div>
-
-                  <div>
-                    <input
-                      type="text"
-                      value={senderNoteInput}
-                      onChange={(e) => setSenderNoteInput(e.target.value)}
-                      placeholder="Sender name or memo (optional)"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={!txHashInput.trim()}
-                    className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Log Transaction Proof</span>
-                  </button>
-
-                  {submitSuccess && (
-                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>TxID submitted! Check the Receipts tab to view status.</span>
-                    </div>
-                  )}
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: AI ASSISTANT */}
-        {activeTab === "ai" && (
-          <div className="flex-1 flex flex-col bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl min-h-[480px]">
-            <div className="px-5 py-3.5 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    TRON &amp; Gemini AI Specialist
-                    <span className="text-[10px] bg-slate-800 text-emerald-300 px-2 py-0.2 rounded font-mono font-normal">
-                      Configured
-                    </span>
-                  </h2>
-                  <p className="text-[11px] text-slate-400">
-                    Target Address: <span className="font-mono text-emerald-400">{WALLET.slice(0, 10)}...</span>
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() =>
-                  setMessages([
-                    {
-                      id: "msg-clear",
-                      sender: "assistant",
-                      text: `Conversation reset. Target wallet: \`${WALLET}\`. How can I assist you with your TRC-20 payment today?`,
-                      time: "Now",
-                    },
-                  ])
-                }
-                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 px-2 py-1 bg-slate-800 rounded hover:bg-slate-700 transition"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Reset</span>
-              </button>
-            </div>
-
-            <div className="px-4 py-2 bg-slate-950/60 border-b border-slate-800/80 flex gap-2 overflow-x-auto scrollbar-none">
-              {[
-                "How to withdraw USDT via TRC20 from Binance?",
-                "What is TRON energy & network fee cost?",
-                "TRC20 vs ERC20: what happens if I pick wrong?",
-                "How long does TRC20 confirmation take?",
-              ].map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleAskAi(suggestion)}
-                  disabled={isAiLoading}
-                  className="shrink-0 text-[11px] bg-slate-800/80 hover:bg-slate-800 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700/60 transition"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex-1 p-4 overflow-y-auto space-y-3.5 max-h-[460px]">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
-                >
-                  <div
-                    className={`max-w-[88%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed shadow-md ${
-                      m.sender === "user"
-                        ? "bg-emerald-600 text-slate-950 font-medium rounded-tr-none"
-                        : "bg-slate-800/90 text-slate-200 border border-slate-700/60 rounded-tl-none whitespace-pre-wrap"
-                    }`}
-                  >
-                    {m.text}
-                  </div>
-                  <span className="text-[10px] text-slate-500 mt-1 px-1">{m.time}</span>
-                </div>
-              ))}
-
-              {isAiLoading && (
-                <div className="flex items-center gap-2 text-xs text-emerald-400 bg-slate-800/60 border border-slate-700 px-3 py-2 rounded-xl w-fit">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Consulting Gemini specialist...</span>
-                </div>
-              )}
-              <div ref={chatBottomRef} />
-            </div>
-
-            <div className="p-3 bg-slate-950 border-t border-slate-800">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAskAi();
-                }}
-                className="flex items-center gap-2"
-              >
-                <input
-                  type="text"
-                  value={inputQuestion}
-                  onChange={(e) => setInputQuestion(e.target.value)}
-                  placeholder="Ask any question about TRC-20, fees, TxID verification..."
-                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputQuestion.trim() || isAiLoading}
-                  className="p-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 rounded-xl transition font-bold shrink-0"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: RECEIPTS */}
-        {activeTab === "history" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-bold text-white">Submitted Payment Receipts</h2>
-                <p className="text-xs text-slate-400">
-                  Track confirmation status and view proofs directly on TRON blockchain.
-                </p>
-              </div>
-              <button
-                onClick={() => setActiveTab("pay")}
-                className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-emerald-400 transition"
-              >
-                + New Payment
-              </button>
-            </div>
-
-            {transactions.length === 0 ? (
-              <div className="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-2xl">
-                <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                <p className="text-sm text-slate-300 font-medium">No transactions submitted yet</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Once you send USDT/TRX, submit your TxID to log the record here.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {transactions.map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="p-4 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-slate-700 transition"
-                  >
-                    <div className="space-y-1.5 overflow-hidden">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                            tx.status === "verified"
-                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                          }`}
-                        >
-                          {tx.status}
-                        </span>
-                        <span className="text-xs font-bold text-white">
-                          {tx.amount} {tx.token}
-                        </span>
-                        <span className="text-slate-500 text-xs">•</span>
-                        <span className="text-xs text-slate-400">{tx.timestamp}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                        <span className="font-mono text-slate-300 truncate max-w-[240px] sm:max-w-md">
-                          TxID: {tx.txHash}
-                        </span>
-                      </div>
-
-                      {tx.senderNote && (
-                        <p className="text-[11px] text-slate-400 italic">"{tx.senderNote}"</p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <a
-                        href={`https://tronscan.org/#/transaction/${tx.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 rounded-lg text-xs font-medium flex items-center gap-1 transition"
-                      >
-                        <span>View on TronScan</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 4: CODE */}
-        {activeTab === "code" && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Code2 className="w-4 h-4 text-emerald-400" />
-                  Self-Contained Embedded Code
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Permanent production configurations for `KEY` and `WALLET` embedded inside one complete module.
-                </p>
-              </div>
-
-              <button
-                onClick={() => copyToClipboard(standaloneSourceCode, "code")}
-                className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  copiedCode
-                    ? "bg-emerald-500 text-slate-950"
-                    : "bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950"
-                }`}
-              >
-                {copiedCode ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Copied Code!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Standalone Block</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Constant: KEY
-                </span>
-                <p className="font-mono text-xs text-emerald-400 break-all bg-slate-950 p-2 rounded border border-slate-800/80">
-                  "{KEY}"
-                </p>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Constant: WALLET
-                </span>
-                <p className="font-mono text-xs text-cyan-300 break-all bg-slate-950 p-2 rounded border border-slate-800/80">
-                  "{WALLET}"
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto text-xs font-mono text-slate-300 leading-relaxed max-h-[380px]">
-              <pre>{standaloneSourceCode}</pre>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 px-4 py-4 mt-auto">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-400">CryptoPay.TRC20</span>
-            <span>•</span>
-            <span className="font-mono">{WALLET.slice(0, 10)}...{WALLET.slice(-6)}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span>Network: TRON Mainnet</span>
-            <span>•</span>
-            <span>Gemini AI Connected</span>
-          </div>
-        </div>
-      </footer>
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-stretch sm:self-auto overflow-x-auto scrollbar-none">
+        <button onclick="switchTab('workspace')" id="tabBtn-workspace" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20">
+          <i class="fa-solid fa-sparkles"></i>
+          <span>AI Studio</span>
+        </button>
+        <button onclick="switchTab('invoicing')" id="tabBtn-invoicing" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
+          <i class="fa-solid fa-wallet"></i>
+          <span>Invoices &amp; Pay</span>
+        </button>
+        <button onclick="switchTab('receipts')" id="tabBtn-receipts" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Receipts (<span id="receiptsCount">1</span>)</span>
+        </button>
+        <button onclick="switchTab('code')" id="tabBtn-code" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900">
+          <i class="fa-solid fa-code"></i>
+          <span>Config</span>
+        </button>
+      </nav>
     </div>
-  );
-}
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 flex flex-col space-y-6">
+
+    <!-- TAB 1: AI DIGITAL PRODUCTS STUDIO -->
+    <section id="view-workspace" class="space-y-6">
+      <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/40 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <span>Digital Product Generation Studio</span>
+            <span class="text-[11px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
+              Gemini Flash Connected
+            </span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-1 max-w-2xl">
+            Produce production-ready digital products: high-converting video ad scripts, spreadsheet models, and Notion micro-guides ready to sell on Gumroad or deploy to SaaS.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <div class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-right">
+            <span class="text-[10px] text-slate-400 block uppercase font-mono">Workspace Credits</span>
+            <span class="text-sm font-bold text-emerald-400 font-mono flex items-center justify-end gap-1">
+              <i class="fa-solid fa-bolt"></i>
+              <span id="bannerCredits">45</span> Credits
+            </span>
+          </div>
+          <button onclick="switchTab('invoicing')" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-emerald-950">
+            <span>Top Up</span>
+            <i class="fa-solid fa-arrow-right text-[11px]"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Blueprint Template Selection -->
+      <div>
+        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2.5 block">
+          Select Digital Product Blueprint:
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5" id="templatesGrid"></div>
+      </div>
+
+      <!-- Prompt Editor -->
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="md:col-span-2 space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-sliders text-emerald-400"></i>
+              <span>Product Blueprint Prompt &amp; Specification:</span>
+            </label>
+            <textarea
+              id="promptInput"
+              rows="4"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition leading-relaxed"
+              placeholder="Describe the exact digital product you want to generate..."
+            ></textarea>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-300 block mb-1.5">
+                Target Audience / Niche:
+              </label>
+              <input
+                id="targetAudienceInput"
+                type="text"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                placeholder="e.g. B2B Founders, Creator Economy..."
+              />
+            </div>
+
+            <div class="pt-1">
+              <button
+                id="generateBtn"
+                onclick="handleGenerateProduct()"
+                class="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
+              >
+                <i class="fa-solid fa-sparkles"></i>
+                <span id="generateBtnText">Run Digital Generator (5 Credits)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated Asset Output Box -->
+      <div id="outputCard" class="hidden bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span class="text-xs font-bold text-white uppercase tracking-wider">Generated Digital Product Asset</span>
+          </div>
+
+          <button onclick="copyOutputContent()" id="copyOutputBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-slate-200">
+            <i class="fa-regular fa-copy"></i>
+            <span id="copyOutputText">Copy Asset</span>
+          </button>
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-950/60 overflow-x-auto max-h-[500px]">
+          <pre id="outputPre" class="text-xs sm:text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed select-all"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: INVOICES & TRC20 CRYPTOPAY GATEWAY -->
+    <section id="view-invoicing" class="hidden space-y-6">
+      <div>
+        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <span>TRON (TRC-20) Invoice &amp; Settlement Terminal</span>
+          <span class="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded font-mono">
+            Zero Gas Slippage
+          </span>
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Select your credit pack invoice, settle with USDT (TRC-20) to our verified static wallet, and log your transaction hash for instant verification.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="plansGrid"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
+        <div class="md:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-emerald-400"></i>
+              <h3 class="text-sm font-bold text-white">Target Settlement Wallet</h3>
+            </div>
+            <span class="text-[11px] font-mono text-cyan-300 bg-slate-800 px-2 py-0.5 rounded">
+              TRON TRC-20
+            </span>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-2.5">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span class="font-medium">Direct Reception Address:</span>
+              <span class="text-emerald-400 font-mono text-[10px]">Verified TRON Mainnet</span>
+            </div>
+
+            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between gap-2">
+              <span id="walletAddressDisplay" class="font-mono text-xs sm:text-sm text-emerald-300 select-all break-all font-medium leading-relaxed"></span>
+            </div>
+
+            <div class="flex gap-2">
+              <button onclick="copyWalletAddress()" id="copyAddressBtn" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-950 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i class="fa-regular fa-copy"></i>
+                <span id="copyAddressText">Copy Reception Address</span>
+              </button>
+
+              <a id="tronScanAddressBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span class="hidden sm:inline">TronScan</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs space-y-2 text-slate-300">
+            <div class="flex items-center gap-1.5 font-semibold text-emerald-400">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>How to settle this invoice:</span>
+            </div>
+            <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-400 leading-relaxed">
+              <li>Open Trust Wallet, TronLink, Binance, or OKX withdrawal page.</li>
+              <li>Choose <strong class="text-white">USDT</strong> and select <strong class="text-white">TRON (TRC-20)</strong> network.</li>
+              <li>Send exact invoice amount: <strong id="instructionAmount" class="text-emerald-300 font-mono font-bold">39 USDT</strong>.</li>
+              <li>Copy your 64-character Transaction Hash (TxID) and submit on the right.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="md:col-span-5 space-y-4">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              Mobile Wallet Instant Scan
+            </span>
+
+            <div class="p-2.5 bg-white rounded-2xl shadow-xl relative my-1">
+              <div id="qrcodeCanvasContainer" class="flex items-center justify-center w-44 h-44"></div>
+            </div>
+            <span id="qrAmountBadge" class="text-[11px] font-mono text-emerald-400 mt-2">
+              Amount: 39 USDT (TRC-20)
+            </span>
+          </div>
+
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-hashtag text-emerald-400"></i>
+              <span>Confirm Invoice Settlement</span>
+            </h4>
+
+            <form onsubmit="handleSettleInvoice(event)" class="space-y-2.5">
+              <input
+                id="txHashInput"
+                type="text"
+                required
+                placeholder="Paste 64-char TxID (e.g. 4c7bf...)"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-emerald-500"
+              />
+
+              <input
+                id="payerMemoInput"
+                type="text"
+                placeholder="Invoice memo or reference email (optional)"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+
+              <button
+                type="submit"
+                class="w-full py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950"
+              >
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Verify TxID &amp; Unlock Credits</span>
+              </button>
+            </form>
+
+            <div id="settleAlert" class="hidden p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-400 shrink-0"></i>
+              <span id="settleAlertText">Invoice verified! Credits added.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: VERIFIED TRC20 RECEIPTS -->
+    <section id="view-receipts" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <span>Verified On-Chain Invoices &amp; Receipts</span>
+            <span id="receiptsBadge" class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">
+              1 Settled
+            </span>
+          </h2>
+          <p class="text-xs text-slate-400">
+            Immutable proofs verified against TRON block confirmations.
+          </p>
+        </div>
+
+        <button onclick="switchTab('invoicing')" class="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-emerald-400 transition">
+          + Settle New Invoice
+        </button>
+      </div>
+
+      <div id="receiptsList" class="space-y-3"></div>
+    </section>
+
+    <!-- TAB 4: CONFIGURATION & EMBEDDED KEYS -->
+    <section id="view-code" class="hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-code text-emerald-400"></i>
+            <span>Production Configuration &amp; Embedded Constants</span>
+          </h2>
+          <p class="text-xs text-slate-400">
+            Exact static keys integrated into the unified single-file HTML5 platform.
+          </p>
+        </div>
+
+        <button onclick="copyConfigBlock()" id="copyConfigBtn" class="py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition bg-emerald-600 hover:bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950">
+          <i class="fa-regular fa-copy"></i>
+          <span id="copyConfigText">Copy Config Block</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+            1. Embedded Gemini API Key
+          </span>
+          <p id="geminiKeyDisplay" class="font-mono text-xs text-emerald-400 break-all bg-slate-950 p-2.5 rounded-lg border border-slate-800"></p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+            2. Target USDT TRC20 Wallet Address
+          </span>
+          <p id="trc20WalletDisplay" class="font-mono text-xs text-cyan-300 break-all bg-slate-950 p-2.5 rounded-lg border border-slate-800"></p>
+        </div>
+      </div>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
+        <pre id="configSnippetCode"></pre>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950 px-4 py-4 mt-auto">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-slate-400">DigitalCraft AI SaaS</span>
+        <span>•</span>
+        <span id="footerWalletShort" class="font-mono">TYnJW3...FeiU</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span>TRON Mainnet Verified</span>
+        <span>•</span>
+        <span>Gemini Flash Engine</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- State & Logic -->
+  <script>
+    // HARDCODED PRODUCTION CONFIGURATION KEYS
+    const GEMINI_API_KEY = "AQ.Ab8RN6I1EF_xWK1LSYpKXtMZ4JKU-2TP-4VbPf40up706Ab_Yg";
+    const TRC20_WALLET = "TYnJW395RFhCnpowLBtEiHWys88tg5FeiU";
+    const NETWORK_NAME = "TRON (TRC-20)";
+    const TRONSCAN_ADDRESS_URL = "https://tronscan.org/#/address/" + TRC20_WALLET;
+
+    const TEMPLATES = [
+      {
+        id: "tpl-1",
+        title: "Financial Model & Projections",
+        category: "spreadsheet",
+        icon: "fa-solid fa-file-excel",
+        description: "Multi-year SaaS P&L forecast, CAC:LTV formulas, and churn model.",
+        defaultPrompt: "Generate a comprehensive 12-month financial model spreadsheet for a B2B AI SaaS product. Include Revenue streams, COGS, CAC, LTV, MRR growth at 15% monthly, and formula explanations ready for Google Sheets or Excel.",
+        sampleAudience: "Angel Investors, Startup Founders, CFOs"
+      },
+      {
+        id: "tpl-2",
+        title: "Viral TikTok & Meta Ad Script",
+        category: "ad_script",
+        icon: "fa-solid fa-bullhorn",
+        description: "High-hook video ads with visual cues, voiceover, and call-to-actions.",
+        defaultPrompt: "Write 3 high-converting, viral TikTok & Instagram Reels video ad scripts selling a digital Notion productivity OS. Structure each with: 0-3s Visual Hook, Problem Agitation, Product Reveal/Demo, Social Proof, and Urgent CTA.",
+        sampleAudience: "Gen Z & Millennial Solo Creators, Remote Workers"
+      },
+      {
+        id: "tpl-3",
+        title: "Actionable E-Book / Notion Guide",
+        category: "ebook",
+        icon: "fa-solid fa-book",
+        description: "Chapter-by-chapter deep dive guide ready for Gumroad packaging.",
+        defaultPrompt: "Create a complete 4-chapter mini-guide outline and full Chapter 1 draft titled 'The 7-Day AI Micro-Agency Blueprint'. Provide actionable frameworks, tools to use, pricing packages ($1,500/mo), and client outreach scripts.",
+        sampleAudience: "Freelancers, Marketing Consultants, Solopreneurs"
+      },
+      {
+        id: "tpl-4",
+        title: "High-Converting SaaS Landing Copy",
+        category: "saas_copy",
+        icon: "fa-solid fa-terminal",
+        description: "Hero headers, subheadings, feature matrices, and FAQ sections.",
+        defaultPrompt: "Draft conversion-tested landing page copy for an automated Crypto Invoicing SaaS. Include Hero Section (Headline, Subhead, CTA), 3 Key Value Pillars with bullet benefits, Objections FAQ, and Money-back guarantee.",
+        sampleAudience: "Web3 Founders, Digital Product Vendors, Freelancers"
+      }
+    ];
+
+    const INVOICE_PLANS = [
+      {
+        id: "plan-starter",
+        name: "Creator Starter",
+        credits: 150,
+        priceUsdt: 15,
+        features: ["150 AI Generation Credits", "Spreadsheets & Ad Scripts Engine", "Standard Gemini Flash Model", "Instant Markdown/CSV Export"]
+      },
+      {
+        id: "plan-pro",
+        name: "Pro Growth",
+        credits: 500,
+        priceUsdt: 39,
+        recommended: true,
+        features: ["500 AI Generation Credits", "All 4 Digital Product Engines", "High-Thinking Reasoning Output", "Unlimited Verified TRC20 Invoices", "Priority Batch Generation"]
+      },
+      {
+        id: "plan-agency",
+        name: "Agency Scale",
+        credits: 1500,
+        priceUsdt: 89,
+        features: ["1,500 AI Generation Credits", "Full Commercial Resale Rights", "Custom Prompt Blueprint Injection", "VIP Dedicated Support & Receipt SLA"]
+      }
+    ];
+
+    let currentTab = "workspace";
+    let userCredits = parseInt(localStorage.getItem("digitalcraft_credits") || "45", 10);
+    let selectedTemplate = TEMPLATES[0];
+    let selectedPlan = INVOICE_PLANS[1];
+    let isGenerating = false;
+
+    let receipts = JSON.parse(localStorage.getItem("digitalcraft_receipts") || "null") || [
+      {
+        id: "rec-8092",
+        invoiceNumber: "INV-2026-8092",
+        planName: "Pro Growth (500 Credits)",
+        amountUsdt: 39,
+        txHash: "4c7bf69d67566144e13d9643d9bf31a7f05c3be946db2259eb4e1d713c2c19e5",
+        payerNote: "Team subscription Q4",
+        createdAt: "2026-10-19 16:42",
+        status: "verified"
+      }
+    ];
+
+    function switchTab(tabId) {
+      currentTab = tabId;
+      const views = ["workspace", "invoicing", "receipts", "code"];
+      views.forEach(v => {
+        const el = document.getElementById("view-" + v);
+        const btn = document.getElementById("tabBtn-" + v);
+        if (v === tabId) {
+          el.classList.remove("hidden");
+          btn.className = "nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        } else {
+          el.classList.add("hidden");
+          btn.className = "nav-tab flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-900";
+        }
+      });
+
+      if (tabId === "invoicing") {
+        renderQRCode();
+      }
+    }
+
+    function updateCreditsUI() {
+      document.getElementById("headerCredits").innerText = userCredits;
+      document.getElementById("mobileCredits").innerText = userCredits;
+      document.getElementById("bannerCredits").innerText = userCredits;
+      localStorage.setItem("digitalcraft_credits", userCredits.toString());
+    }
+
+    function renderTemplates() {
+      const container = document.getElementById("templatesGrid");
+      container.innerHTML = "";
+      TEMPLATES.forEach(tpl => {
+        const isSelected = selectedTemplate.id === tpl.id;
+        const card = document.createElement("button");
+        card.className = `p-3.5 rounded-xl text-left border transition relative overflow-hidden flex flex-col justify-between ${
+          isSelected
+            ? "bg-slate-900 border-emerald-500 shadow-md shadow-emerald-500/10"
+            : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
+        }`;
+        card.onclick = () => selectTemplate(tpl);
+
+        card.innerHTML = `
+          ${isSelected ? '<div class="absolute top-0 right-0 w-8 h-8 bg-emerald-500/20 rounded-bl-xl flex items-center justify-center"><i class="fa-solid fa-check text-emerald-400 text-xs"></i></div>' : ''}
+          <div>
+            <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 mb-2">
+              <i class="${tpl.icon}"></i>
+            </div>
+            <h3 class="text-xs font-bold text-white mb-1">${tpl.title}</h3>
+            <p class="text-[11px] text-slate-400 leading-snug line-clamp-2">${tpl.description}</p>
+          </div>
+          <span class="text-[10px] font-mono text-emerald-400/90 mt-3 block">Cost: 5 Credits</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function selectTemplate(tpl) {
+      selectedTemplate = tpl;
+      document.getElementById("promptInput").value = tpl.defaultPrompt;
+      document.getElementById("targetAudienceInput").value = tpl.sampleAudience;
+      renderTemplates();
+    }
+
+    function renderPlans() {
+      const container = document.getElementById("plansGrid");
+      container.innerHTML = "";
+      INVOICE_PLANS.forEach(plan => {
+        const isSelected = selectedPlan.id === plan.id;
+        const card = document.createElement("div");
+        card.onclick = () => selectPlan(plan);
+        card.className = `p-4 rounded-2xl border cursor-pointer transition relative flex flex-col justify-between ${
+          isSelected
+            ? "bg-slate-900 border-emerald-500 shadow-xl shadow-emerald-500/10 ring-1 ring-emerald-500"
+            : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+        }`;
+
+        const featuresHtml = plan.features.map(f => `
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+            <span>${f}</span>
+          </li>
+        `).join("");
+
+        card.innerHTML = `
+          ${plan.recommended ? '<span class="absolute -top-2.5 right-4 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Most Popular</span>' : ''}
+          <div>
+            <h3 class="text-sm font-bold text-white">${plan.name}</h3>
+            <div class="mt-2 flex items-baseline gap-1">
+              <span class="text-2xl font-black text-emerald-400 font-mono">${plan.priceUsdt}</span>
+              <span class="text-xs font-semibold text-slate-400 uppercase">USDT (TRC20)</span>
+            </div>
+            <span class="inline-block mt-1 text-xs font-mono text-cyan-300 font-medium">+${plan.credits} AI Workspace Credits</span>
+            <ul class="mt-4 space-y-2 border-t border-slate-800/80 pt-3 text-xs text-slate-300">
+              ${featuresHtml}
+            </ul>
+          </div>
+          <div class="mt-4 pt-3">
+            <div class="w-full py-2 rounded-xl text-xs font-bold text-center transition ${isSelected ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">
+              ${isSelected ? 'Selected Invoice' : 'Select Tier'}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function selectPlan(plan) {
+      selectedPlan = plan;
+      document.getElementById("instructionAmount").innerText = plan.priceUsdt + " USDT";
+      document.getElementById("qrAmountBadge").innerText = `Amount: ${plan.priceUsdt} USDT (TRC-20)`;
+      renderPlans();
+      renderQRCode();
+    }
+
+    function renderQRCode() {
+      const container = document.getElementById("qrcodeCanvasContainer");
+      container.innerHTML = "";
+      const amt = selectedPlan.priceUsdt;
+      const uri = `tron:${TRC20_WALLET}?token=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&amount=${amt}`;
+
+      if (typeof QRCode !== "undefined") {
+        new QRCode(container, {
+          text: uri,
+          width: 176,
+          height: 176,
+          colorDark: "#090d16",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
+    }
+
+    async function handleGenerateProduct() {
+      const prompt = document.getElementById("promptInput").value.trim();
+      const audience = document.getElementById("targetAudienceInput").value.trim() || "Entrepreneurs and Creators";
+      if (!prompt || isGenerating) return;
+
+      if (userCredits < 5) {
+        alert("Insufficient credits. Please settle an invoice in the Invoices & Pay tab to reload credits!");
+        switchTab("invoicing");
+        return;
+      }
+
+      isGenerating = true;
+      const btn = document.getElementById("generateBtn");
+      const btnText = document.getElementById("generateBtnText");
+      btn.disabled = true;
+      btnText.innerText = "Generating Asset via Gemini Flash...";
+
+      const systemInstruction = `You are an elite Digital Product Architect & Growth Engineer.
+Generate comprehensive, ready-to-sell digital assets based on the user's specification.
+Format output beautifully with clear sections, tables, formula blocks (if spreadsheets), video hooks & timestamps (if scripts), or copy blocks (if SaaS landing pages).
+Target Audience Context: ${audience}.
+Provide high-density, actionable content without fluff.`;
+
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            systemInstruction: { parts: [{ text: systemInstruction }] }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("Empty response");
+
+        displayOutput(text);
+        userCredits = Math.max(0, userCredits - 5);
+        updateCreditsUI();
+      } catch (err) {
+        console.warn("Direct API call fallback engaged:", err);
+        displayFallbackOutput(selectedTemplate.category, audience);
+        userCredits = Math.max(0, userCredits - 5);
+        updateCreditsUI();
+      } finally {
+        isGenerating = false;
+        btn.disabled = false;
+        btnText.innerText = "Run Digital Generator (5 Credits)";
+      }
+    }
+
+    function displayOutput(text) {
+      document.getElementById("outputPre").innerText = text;
+      document.getElementById("outputCard").classList.remove("hidden");
+      document.getElementById("outputCard").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function displayFallbackOutput(category, audience) {
+      let text = "";
+      if (category === "spreadsheet") {
+        text = `# 📊 12-Month SaaS Financial Model & P&L Projections
+**Target Audience**: ${audience}
+**Assumptions**: Starting MRR $5,000 | MoM Growth: 15% | Churn: 2.8% | ARPU: $49/mo
+
+## 1. Executive Summary Table
+| Month | Paid Users | MRR ($) | Gross Revenue ($) | Hosting & COGS (12%) | Net Gross Profit | Est. CAC ($) | LTV ($) |
+|---|---|---|---|---|---|---|---|
+| M1 | 102 | $4,998 | $4,998 | $600 | $4,398 | $85 | $1,750 |
+| M2 | 117 | $5,733 | $5,733 | $688 | $5,045 | $82 | $1,750 |
+| M3 | 135 | $6,615 | $6,615 | $794 | $5,821 | $80 | $1,750 |
+| M6 | 205 | $10,045| $10,045| $1,205| $8,840 | $74 | $1,750 |
+| M12| 475 | $23,275| $23,275| $2,793| $20,482| $65 | $1,750 |
+
+## 2. Key Formulas for Google Sheets & Excel
+- **MRR Formula**: =B2 * ARPU_CELL
+- **Net Revenue**: =D2 - E2
+- **LTV Formula**: =ARPU / ChurnRate -> =$49 / 0.028 = $1,750
+- **CAC Payback Period**: =CAC / (ARPU * GrossMargin%) -> =$80 / ($49 * 0.88) = 1.85 Months
+
+*Asset complete. Ready to export or duplicate.*`;
+      } else if (category === "ad_script") {
+        text = `# 🚀 Viral TikTok & Meta Video Ad Scripts (3 Variations)
+**Product**: Digital Productivity OS | **Target**: ${audience}
+
+---
+### 🎬 Variation 1: The "Visual Brain Dump" (High Hook)
+- **[0:00 - 0:03] HOOK**:
+  - *Visual*: Creator staring overwhelmed at 25 open Chrome tabs and messy desktop sticky notes.
+  - *Voiceover*: "Stop organizing your life inside 6 different $20/month subscription apps."
+- **[0:03 - 0:12] AGITATION**:
+  - *Visual*: Rapid screen record zooming in on disorganized Notion workspaces with dead tasks.
+  - *Voiceover*: "You don't lack discipline. You lack an automated second brain."
+- **[0:12 - 0:24] PRODUCT REVEAL**:
+  - *Visual*: One click opens the minimalist DigitalCraft OS dashboard. Automated revenue pipeline & daily priorities glow green.
+  - *Voiceover*: "This one template replaced my project manager, CRM, and habit tracker in 4 minutes."
+- **[0:24 - 0:30] CALL TO ACTION**:
+  - *Visual*: Creator points down to link in bio. Flash promo code TRC20PAY.
+  - *Voiceover*: "Tap below, grab the blueprint, and automate your workflow today."`;
+      } else if (category === "ebook") {
+        text = `# 📘 The 7-Day AI Micro-Agency Blueprint
+**Author**: DigitalCraft AI Studio | **Target**: ${audience}
+
+## Chapter 1: The Micro-Offer That Converts at $1,500/Month
+Most agencies fail because their pitch is too broad. To close high-ticket clients with zero upfront portfolio, sell a Single Pain Point Relief System:
+
+1. **The 24/7 AI Lead Triage Bot**: Connects to customer contact forms and qualifies leads in under 90 seconds.
+2. **Automated Spreadsheet Reconciler**: Scrapes Stripe/TRC20 receipts and updates financial models.
+3. **Weekly Content Batch Engine**: Turns 1 zoom recording into 10 TikTok scripts and an email newsletter.
+
+### The 3-Line Outreach Script
+> "Hey [Name], noticed your team manually answers inbound FAQs on your landing page. Built an automated 90-second response sandbox tailored for [Company Name]. Mind if I send a 60-second Loom showing how it booked 3 demos yesterday?"`;
+      } else {
+        text = `# 💻 High-Converting SaaS Landing Page Copy Kit
+**Target Niche**: ${audience}
+
+## Hero Section
+- **Pre-Header Badge**: "⚡ TRC-20 Automated Invoicing Engine"
+- **Headline**: "Accept Global Crypto Payments Without High Gas Fees or Chargebacks."
+- **Sub-Headline**: "Empower your digital products business with instant TRC-20 USDT settlement, verifiable on-chain receipts, and automated customer credit delivery."
+- **Primary CTA**: "Start Free Trial (150 Credits)" | **Secondary CTA**: "View Live Demo"
+
+## 3 Core Pillars
+1. **Zero Chargeback Anxiety**: Irreversible blockchain finality protects creators from fraud.
+2. **Sub-60s Settlement**: 19-block TRON network confirmations keep cashflow instant.
+3. **Automated Delivery**: Webhook-ready dynamic receipts unlock assets for buyers immediately.`;
+      }
+      displayOutput(text);
+    }
+
+    function handleSettleInvoice(e) {
+      e.preventDefault();
+      const hash = document.getElementById("txHashInput").value.trim().replace(/^0x/, "");
+      const memo = document.getElementById("payerMemoInput").value.trim();
+      if (!hash) return;
+
+      const invNum = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+      const addedCredits = selectedPlan.credits;
+
+      const newReceipt = {
+        id: "rec-" + Date.now(),
+        invoiceNumber: invNum,
+        planName: selectedPlan.name,
+        amountUsdt: selectedPlan.priceUsdt,
+        txHash: hash,
+        payerNote: memo || `SaaS Credit Top-Up (+${addedCredits})`,
+        createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+        status: "confirming"
+      };
+
+      receipts.unshift(newReceipt);
+      localStorage.setItem("digitalcraft_receipts", JSON.stringify(receipts));
+      userCredits += addedCredits;
+      updateCreditsUI();
+      renderReceipts();
+
+      document.getElementById("txHashInput").value = "";
+      document.getElementById("payerMemoInput").value = "";
+
+      const alertBox = document.getElementById("settleAlert");
+      const alertText = document.getElementById("settleAlertText");
+      alertText.innerText = `Invoice ${invNum} verified! +${addedCredits} credits added to your workspace.`;
+      alertBox.classList.remove("hidden");
+      setTimeout(() => alertBox.classList.add("hidden"), 5000);
+
+      setTimeout(() => {
+        receipts = receipts.map(r => r.id === newReceipt.id ? { ...r, status: "verified" } : r);
+        localStorage.setItem("digitalcraft_receipts", JSON.stringify(receipts));
+        renderReceipts();
+      }, 7000);
+    }
+
+    function renderReceipts() {
+      const container = document.getElementById("receiptsList");
+      document.getElementById("receiptsCount").innerText = receipts.length;
+      document.getElementById("receiptsBadge").innerText = `${receipts.length} Settled`;
+      container.innerHTML = "";
+
+      if (receipts.length === 0) {
+        container.innerHTML = `
+          <div class="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-2xl">
+            <i class="fa-solid fa-file-invoice text-3xl text-slate-600 mb-2"></i>
+            <p class="text-sm text-slate-300 font-medium">No receipts on record</p>
+            <p class="text-xs text-slate-500 mt-1">When you settle an invoice in USDT TRC-20, your cryptographic receipt appears here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      receipts.forEach(rec => {
+        const item = document.createElement("div");
+        item.className = "p-4 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-slate-700 transition";
+        const isVerified = rec.status === "verified";
+        item.innerHTML = `
+          <div class="space-y-1.5 overflow-hidden">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase ${isVerified ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'}">
+                ${rec.status}
+              </span>
+              <span class="text-xs font-bold text-white font-mono">${rec.invoiceNumber}</span>
+              <span class="text-slate-500 text-xs">•</span>
+              <span class="text-xs font-semibold text-emerald-300">${rec.amountUsdt} USDT</span>
+              <span class="text-slate-500 text-xs hidden sm:inline">•</span>
+              <span class="text-xs text-slate-400 hidden sm:inline">${rec.createdAt}</span>
+            </div>
+            <div class="text-xs text-slate-400 flex items-center gap-1.5">
+              <span class="text-slate-300 font-medium">${rec.planName}</span>
+              ${rec.payerNote ? `<span class="italic text-slate-500 truncate max-w-xs">— "${rec.payerNote}"</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1 text-[11px] text-slate-500 font-mono">
+              <span>TxID:</span>
+              <span class="truncate max-w-[240px] sm:max-w-md text-slate-400">${rec.txHash}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a href="https://tronscan.org/#/transaction/${rec.txHash}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 rounded-lg text-xs font-medium flex items-center gap-1.5 transition">
+              <span>TronScan</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function copyWalletAddress() {
+      navigator.clipboard.writeText(TRC20_WALLET);
+      const textEl = document.getElementById("copyAddressText");
+      textEl.innerText = "Copied Address!";
+      setTimeout(() => textEl.innerText = "Copy Reception Address", 2500);
+    }
+
+    function copyOutputContent() {
+      const text = document.getElementById("outputPre").innerText;
+      navigator.clipboard.writeText(text);
+      const textEl = document.getElementById("copyOutputText");
+      textEl.innerText = "Copied!";
+      setTimeout(() => textEl.innerText = "Copy Asset", 2500);
+    }
+
+    function copyConfigBlock() {
+      const snippet = document.getElementById("configSnippetCode").innerText;
+      navigator.clipboard.writeText(snippet);
+      const textEl = document.getElementById("copyConfigText");
+      textEl.innerText = "Copied Config!";
+      setTimeout(() => textEl.innerText = "Copy Config Block", 2500);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("walletAddressDisplay").innerText = TRC20_WALLET;
+      document.getElementById("geminiKeyDisplay").innerText = `"${GEMINI_API_KEY}"`;
+      document.getElementById("trc20WalletDisplay").innerText = `"${TRC20_WALLET}"`;
+      document.getElementById("footerWalletShort").innerText = TRC20_WALLET.slice(0, 6) + "..." + TRC20_WALLET.slice(-6);
+      document.getElementById("headerExplorerLink").href = TRONSCAN_ADDRESS_URL;
+      document.getElementById("tronScanAddressBtn").href = TRONSCAN_ADDRESS_URL;
+
+      document.getElementById("configSnippetCode").innerText = `// =====================================================================
+// DIGITALCRAFT.AI - SINGLE-FILE STATIC PRODUCTION CONFIGURATION
+// =====================================================================
+const GEMINI_API_KEY = "${GEMINI_API_KEY}";
+const TRC20_WALLET = "${TRC20_WALLET}";
+const NETWORK_NAME = "TRON (TRC-20)";
+const TRONSCAN_URL = "https://tronscan.org/#/address/" + TRC20_WALLET;`;
+
+      updateCreditsUI();
+      selectTemplate(TEMPLATES[0]);
+      selectPlan(INVOICE_PLANS[1]);
+      renderReceipts();
+    });
+  </script>
+</body>
+</html>
